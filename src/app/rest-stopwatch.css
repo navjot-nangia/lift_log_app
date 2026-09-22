@@ -1,0 +1,93 @@
+.rest-stopwatch {
+  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: #111319;
+  color: #fff;
+  box-shadow: 0 10px 28px #1113191c;
+}
+
+.rest-stopwatch-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rest-stopwatch-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rest-stopwatch-heading span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.rest-stopwatch-heading span svg {
+  width: 17px;
+  height: 17px;
+  color: #7f8eff;
+}
+
+.rest-stopwatch-heading small {
+  color: #aeb2bc;
+  font-size: 12px;
+}
+
+.rest-stopwatch-heading strong {
+  font-size: 36px;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rest-stopwatch-controls {
+  display: grid;
+  grid-template-columns: 1fr 48px;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.rest-stopwatch-controls button {
+  min-height: 46px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.rest-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+}
+
+.rest-toggle svg,
+.rest-reset svg {
+  width: 17px;
+  height: 17px;
+}
+
+.rest-reset {
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffffff1f;
+  background: #ffffff0f;
+  color: #c4c7cf;
+}
+
+.rest-reset:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+@media (max-width: 390px) {
+  .rest-stopwatch-heading strong { font-size: 32px; }
+  .rest-stopwatch-heading small { display: none; }
+}
