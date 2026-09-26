@@ -2,10 +2,11 @@
   "name": "Lift Log — Workout Tracker",
   "short_name": "Lift Log",
   "description": "A minimalist strength workout tracker.",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f5f6f8",
   "theme_color": "#f5f6f8",
   "orientation": "portrait-primary",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }

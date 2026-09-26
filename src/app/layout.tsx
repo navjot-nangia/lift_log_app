@@ -3,11 +3,13 @@ import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 import "./rest-stopwatch.css";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   title: "Lift Log",
   description: "A minimalist strength workout tracker.",
-  manifest: "/manifest.webmanifest",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  manifest: `${basePath}/manifest.webmanifest`,
+  icons: { icon: `${basePath}/icon.svg`, apple: `${basePath}/icon.svg` },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Lift Log" },
 };
 

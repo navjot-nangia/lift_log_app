@@ -22,15 +22,29 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Railway deployment
+## Web deployment
 
-1. Create a new Railway project.
-2. Choose **Deploy from GitHub repo**.
-3. Select `navjot-nangia/lift_log_app`.
-4. Deploy the `main` branch.
-5. Generate a Railway domain under **Settings → Networking**.
+The PWA deploys automatically to GitHub Pages whenever `main` changes:
 
-Railway will use `railway.toml` to run `npm run build` and `npm start`. No environment variables or database are required for this version.
+**https://navjot-nangia.github.io/lift_log_app/**
+
+In the repository, select **Settings → Pages → Source: GitHub Actions** once to enable publishing.
+
+## Android app
+
+The same static build is packaged as an Android app with Capacitor. To synchronize the web app into the Android project:
+
+```bash
+npm run android:sync
+```
+
+To create a test APK:
+
+```bash
+npm run android:debug
+```
+
+The APK is created at `android/app/build/outputs/apk/debug/app-debug.apk`. A signed Android App Bundle will be configured later for Google Play publishing.
 
 ## Storage
 

@@ -6,15 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:debug": "npm run build && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.2",
     "lucide-react": "^0.468.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
     "@eslint/eslintrc": "^3.3.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
