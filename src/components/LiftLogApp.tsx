@@ -98,7 +98,7 @@ export default function LiftLogApp() {
 
 function WorkoutHome({ entries, begin }: { entries: LiftEntry[]; begin: (lifts: Lift[]) => void }) {
   const thisWeek = entries.filter((item) => Date.now() - new Date(item.createdAt).getTime() < 604800000).length;
-  return <div className="screen"><header className="topbar"><div><p className="eyebrow">LIFT LOG</p><h1>Start a workout</h1></div><div className="brand-mark"><Dumbbell /></div></header>
+  return <div className="screen"><header className="topbar"><div><p className="eyebrow">LIFT LOG</p><h1>Start a workout</h1></div><div className="brand-mark"><BarbellLogo /></div></header>
     <section className="week-card"><div><span>This week</span><strong>{thisWeek}</strong><small>logged lifts</small></div><div className="week-bars">{[38,72,50,92,61,28,46].map((height,index) => <i key={index} style={{ height: `${height}%` }} />)}</div></section>
     <div className="section-heading"><h2>My routines</h2><button onClick={() => begin(["Bench Press"])}>Empty workout</button></div>
     <div className="routine-list">{ROUTINES.map((routine) => <button className="routine-card" key={routine.name} onClick={() => begin(routine.lifts)}><div className="routine-icon"><Dumbbell /></div><div><strong>{routine.name}</strong><span>{routine.detail}</span></div><Plus /></button>)}</div>
@@ -116,7 +116,10 @@ function ActiveWorkout(props: ActiveProps) {
     <section className="lift-panel"><label>Exercise<select value={props.lift} onChange={(event) => props.setLift(event.target.value as Lift)}>{LIFTS.map((item) => <option key={item}>{item}</option>)}</select></label>
       {props.best > 0 && <div className="best-chip"><Trophy /> Personal best {props.best} lb</div>}
       <div className="weight-block"><div className="weight-label"><span>Weight</span><button onClick={() => props.setWeight(0)}><RotateCcw /> Reset</button></div><div className="weight-input"><input type="number" inputMode="decimal" min="0" value={props.weight} onChange={(event) => props.setWeight(Math.max(0, Number(event.target.value)))} /><span>lb</span></div></div>
-      <div className="increment-grid">{INCREMENTS.map((amount) => <button key={amount} onClick={() => props.setWeight((current) => Number((current + amount).toFixed(1)))}>+{amount}</button>)}</div>
+      <div className="weight-adjustments" aria-label="Weight adjustments">
+        <div className="weight-adjustment-row"><span>Remove</span><div className="increment-grid decrement-grid">{INCREMENTS.map((amount) => <button key={amount} aria-label={`Remove ${amount} pounds`} onClick={() => props.setWeight((current) => Math.max(0, Number((current - amount).toFixed(1))))}>−{amount}</button>)}</div></div>
+        <div className="weight-adjustment-row"><span>Add</span><div className="increment-grid">{INCREMENTS.map((amount) => <button key={amount} aria-label={`Add ${amount} pounds`} onClick={() => props.setWeight((current) => Number((current + amount).toFixed(1)))}>+{amount}</button>)}</div></div>
+      </div>
       <div className="counter-grid"><Counter label="Sets" value={props.sets} onChange={props.setSets} /><Counter label="Reps" value={props.reps} onChange={props.setReps} /></div>
       <button className="primary-button" onClick={props.logLift}><Check />Complete set</button>
     </section></div>;
@@ -135,3 +138,4 @@ function ProgressView({ entries, bests, volume }: { entries: LiftEntry[]; bests:
 function Counter({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) { return <div className="counter"><span>{label}</span><div><button onClick={() => onChange(Math.max(1,value-1))} aria-label={`Decrease ${label}`}><Minus /></button><strong>{value}</strong><button onClick={() => onChange(Math.min(99,value+1))} aria-label={`Increase ${label}`}><Plus /></button></div></div>; }
 function NavButton({ active, icon, label, onClick }: { active: boolean; icon: React.ReactNode; label: string; onClick: () => void }) { return <button className={active ? "active" : ""} onClick={onClick}>{icon}<span>{label}</span></button>; }
 function Empty() { return <div className="empty"><Dumbbell /><h2>No workouts yet</h2><p>Your completed lifts will appear here.</p></div>; }
+function BarbellLogo() { return <svg className="barbell-logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 28v8M14 22v20M20 26v12M20 32h24M44 26v12M50 22v20M56 28v8" /></svg>; }

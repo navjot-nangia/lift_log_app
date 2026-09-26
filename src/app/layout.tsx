@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Lift Log",
   description: "A minimalist strength workout tracker.",
   manifest: `${basePath}/manifest.webmanifest`,
-  icons: { icon: `${basePath}/icon.svg`, apple: `${basePath}/icon.svg` },
+  icons: { icon: `${basePath}/icon.svg`, apple: `${basePath}/icon-180.png` },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Lift Log" },
 };
 
