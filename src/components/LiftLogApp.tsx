@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import RoutineSetup, { WeekPlanner } from "./RoutineSetup";
+import { FitnessIcon } from "./FitnessArt";
 import {
-  BarChart3, Check, ChevronLeft, Clock3, Copy, Dumbbell, History, Home,
-  Pause, Play, Plus, RotateCcw, Settings2, TimerReset, Trash2, Trophy, X,
+  Check, ChevronLeft, Copy, Pause, Play, Plus, RotateCcw, TimerReset, Trash2, X,
 } from "lucide-react";
 import {
   DEFAULT_ROUTINES, DEFAULT_SETTINGS, allExerciseNames, completedSets, createSession,
@@ -252,12 +252,12 @@ function WorkoutHome({ data, draft, begin, beginEmpty, resume }: { data: LiftLog
   const weekStart = Date.now() - 604800000;
   const thisWeek = data.sessions.filter((session) => new Date(session.startedAt).getTime() >= weekStart).length;
   return <div className="screen">
-    <header className="topbar"><div><p className="eyebrow">LIFT LOG</p><h1>Start a workout</h1></div><div className="brand-mark"><BarbellLogo /></div></header>
+    <header className="topbar"><div><p className="eyebrow">LIFT LOG</p><h1>Start a workout</h1></div><div className="brand-mark"><FitnessIcon kind="barbell" /></div></header>
     {draft && <button className="resume-card" onClick={resume}><Play /><span><strong>Resume {draft.routineName}</strong><small>{completedSets(draft).length} completed sets</small></span></button>}
     <section className="week-card"><div><span>This week</span><strong>{thisWeek}</strong><small>completed workouts</small></div><div className="week-bars">{[38,72,50,92,61,28,46].map((height,index) => <i key={index} style={{ height: height + "%" }} />)}</div></section>
     {data.schedule?.length ? <section className="today-card"><span>Today · {new Date().toLocaleDateString(undefined, { weekday: "long" })}</span>{(() => { const today = (new Date().getDay() + 6) % 7; const id = data.schedule?.find((item) => item.day === today)?.routineId; const routine = data.routines.find((item) => item.id === id); return routine ? <button onClick={() => begin(routine)}>Start {routine.name} <Plus /></button> : <strong>Rest day</strong>; })()}</section> : null}
     <div className="section-heading"><h2>My routines</h2><button onClick={beginEmpty}>Empty workout</button></div>
-    <div className="routine-list">{data.routines.map((routine) => <button className="routine-card" key={routine.id} onClick={() => begin(routine)}><div className="routine-icon"><Dumbbell /></div><div><strong>{routine.name}</strong><span>{routine.exercises.length} exercises · {routine.exercises.reduce((sum, exercise) => sum + exercise.targetSets, 0)} sets</span></div><Plus /></button>)}</div>
+    <div className="routine-list">{data.routines.map((routine, index) => <button className="routine-card" key={routine.id} onClick={() => begin(routine)}><div className="routine-icon"><FitnessIcon kind={(["dumbbell", "rack", "plate", "barbell"] as const)[index % 4]} /></div><div><strong>{routine.name}</strong><span>{routine.exercises.length} exercises · {routine.exercises.reduce((sum, exercise) => sum + exercise.targetSets, 0)} sets</span></div><Plus /></button>)}</div>
     {data.sessions[0] && <><div className="section-heading"><h2>Last workout</h2><span>{formatDate(data.sessions[0].startedAt)}</span></div><button className="last-card session-link"><strong>{data.sessions[0].routineName}</strong><p>{data.sessions[0].exercises.length} exercises · {completedSets(data.sessions[0]).length} sets · {sessionDurationMinutes(data.sessions[0])} min</p></button></>}
   </div>;
 }
@@ -339,7 +339,7 @@ function RestTimer({ seconds, running, start, pause, resume, reset, adjust }: { 
 }
 
 function SummaryView({ session, unit, done }: { session: WorkoutSession; unit: string; done: () => void }) {
-  return <div className="screen"><header className="topbar"><div><p className="eyebrow">WORKOUT COMPLETE</p><h1>Strong work.</h1></div><Trophy /></header>
+  return <div className="screen"><header className="topbar"><div><p className="eyebrow">WORKOUT COMPLETE</p><h1>Strong work.</h1></div><FitnessIcon kind="lifter" /></header>
     <div className="summary-grid"><Metric label="Duration" value={sessionDurationMinutes(session) + " min"} /><Metric label="Exercises" value={String(session.exercises.length)} /><Metric label="Completed sets" value={String(completedSets(session).length)} /><Metric label="Volume" value={formatVolume(sessionVolume(session)) + " " + unit} /></div>
     <section className="summary-list"><h2>{session.routineName}</h2>{session.exercises.map((exercise) => <div key={exercise.id}><strong>{exercise.name}</strong><span>{exercise.sets.filter((set) => set.completed).map((set) => set.weight + "×" + set.reps).join(" · ") || "No completed sets"}</span></div>)}</section>
     {session.notes && <p className="summary-notes">{session.notes}</p>}
@@ -348,7 +348,7 @@ function SummaryView({ session, unit, done }: { session: WorkoutSession; unit: s
 }
 
 function HistoryView({ sessions, unit, open, deleted, undoDelete }: { sessions: WorkoutSession[]; unit: string; open: (id: string) => void; deleted: WorkoutSession | null; undoDelete: () => void }) {
-  return <div className="screen"><header className="topbar"><div><p className="eyebrow">TRAINING</p><h1>History</h1></div><Clock3 /></header>
+  return <div className="screen"><header className="topbar"><div><p className="eyebrow">TRAINING</p><h1>History</h1></div><FitnessIcon kind="calendar" /></header>
     {deleted && <button className="undo-card" onClick={undoDelete}>Undo deleted workout</button>}
     {sessions.length === 0 ? <Empty title="No workouts yet" detail="Your completed workout sessions will appear here." /> : <div className="session-list">{sessions.map((session) => <button key={session.id} onClick={() => open(session.id)}><div><strong>{session.routineName}</strong><span>{formatDate(session.startedAt)} · {sessionDurationMinutes(session)} min</span><small>{session.exercises.length} exercises · {completedSets(session).length} sets</small></div><b>{formatVolume(sessionVolume(session))}<small> {unit}</small></b></button>)}</div>}
   </div>;
@@ -375,7 +375,7 @@ function ProgressView({ sessions, unit, exerciseNames }: { sessions: WorkoutSess
     const best = sets.reduce<WorkoutSet | null>((winner, set) => !winner || estimatedOneRepMax(set.weight, set.reps) > estimatedOneRepMax(winner.weight, winner.reps) ? set : winner, null);
     return { name, best, frequency: sessions.filter((session) => session.exercises.some((exercise) => exercise.name === name && exercise.sets.some((set) => set.completed))).length };
   }).filter((record) => record.best);
-  return <div className="screen"><header className="topbar"><div><p className="eyebrow">OVERVIEW</p><h1>Progress</h1></div><Trophy /></header>
+  return <div className="screen"><header className="topbar"><div><p className="eyebrow">OVERVIEW</p><h1>Progress</h1></div><FitnessIcon kind="chart" /></header>
     <div className="summary-grid"><Metric label="Workouts" value={String(sessions.length)} /><Metric label="Weekly sets" value={String(weeklySets)} /><Metric label="Total volume" value={formatVolume(volume) + " " + unit} /><Metric label="Exercises trained" value={String(records.length)} /></div>
     <section className="progress-card"><div className="section-heading"><h2>Strength records</h2><span>Estimated 1RM</span></div>{records.length === 0 ? <p className="muted-copy">Complete workouts to build your records.</p> : records.map((record) => <div className="record-row" key={record.name}><div><strong>{record.name}</strong><small>{record.best?.weight}×{record.best?.reps} · trained {record.frequency} times</small></div><b>{Math.round(estimatedOneRepMax(record.best!.weight, record.best!.reps))}<small> {unit}</small></b></div>)}</section>
   </div>;
@@ -400,7 +400,7 @@ function MoreView({ data, setData, exerciseNames, notify, changeUnit }: { data: 
     setNewRoutineName("");
   }
 
-  return <div className="screen"><header className="topbar"><div><p className="eyebrow">SETTINGS</p><h1>More</h1></div><Settings2 /></header>
+  return <div className="screen"><header className="topbar"><div><p className="eyebrow">SETTINGS</p><h1>More</h1></div><FitnessIcon kind="bag" /></header>
     <section className="settings-card"><h2>Training settings</h2><div className="settings-grid"><label>Units<select value={data.settings.unit} onChange={(event) => changeUnit(event.target.value as "lb" | "kg")}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label><label>Bar weight<input type="number" value={data.settings.barWeight} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, barWeight: Number(event.target.value) } }))} /></label><label>Default rest<select value={data.settings.defaultRestSeconds} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, defaultRestSeconds: Number(event.target.value) } }))}>{[30,60,90,120,180,240].map((seconds) => <option key={seconds} value={seconds}>{seconds} sec</option>)}</select></label></div></section>
     <section className="settings-card"><h2>Weekly routine schedule</h2><p className="muted-copy">Drag days to swap them, or select a split for each day.</p><WeekPlanner data={data} update={setData} compact /><div className="schedule-exercises"><h3>Add your own exercise</h3><p className="muted-copy">Create an exercise here, then open a routine below to add it to that workout.</p><div className="add-line"><input value={customName} placeholder="Exercise name" aria-label="New exercise name" onChange={(event) => setCustomName(event.target.value)} /><button onClick={addCustom}><Plus />Add</button></div>{data.customExercises.length > 0 && <div className="tag-list">{data.customExercises.map((name) => <span key={name}>{name}<button aria-label={`Remove ${name}`} onClick={() => setData((current) => ({ ...current, customExercises: current.customExercises.filter((item) => item !== name) }))}><X /></button></span>)}</div>}</div></section>
     <section className="settings-card"><h2>Routine builder</h2><div className="add-line"><input value={newRoutineName} placeholder="New routine name" onChange={(event) => setNewRoutineName(event.target.value)} /><button onClick={addRoutine}><Plus />Create</button></div>{data.routines.map((routine, index) => <RoutineEditor key={routine.id} routine={routine} exerciseNames={exerciseNames} update={(updated) => setData((current) => ({ ...current, routines: current.routines.map((item, itemIndex) => itemIndex === index ? updated : item) }))} remove={() => setData((current) => ({ ...current, routines: current.routines.filter((item) => item.id !== routine.id) }))} />)}</section>
@@ -414,10 +414,9 @@ function RoutineEditor({ routine, exerciseNames, update, remove }: { routine: Ro
 }
 
 function BottomNav({ view, navigate, beginEmpty }: { view: View; navigate: (view: View, backwards?: boolean) => void; beginEmpty: () => void }) {
-  return <nav className="bottom-nav" aria-label="Main navigation"><NavButton active={view === "workout"} icon={<Home />} label="Workout" onClick={() => navigate("workout", true)} /><NavButton active={view === "history"} icon={<History />} label="History" onClick={() => navigate("history")} /><button className="start-fab" onClick={beginEmpty} aria-label="Start an empty workout"><Plus /></button><NavButton active={view === "progress"} icon={<BarChart3 />} label="Progress" onClick={() => navigate("progress")} /><NavButton active={view === "more"} icon={<Settings2 />} label="More" onClick={() => navigate("more")} /></nav>;
+  return <nav className="bottom-nav" aria-label="Main navigation"><NavButton active={view === "workout"} icon={<FitnessIcon kind="dumbbell" />} label="Workout" onClick={() => navigate("workout", true)} /><NavButton active={view === "history"} icon={<FitnessIcon kind="calendar" />} label="History" onClick={() => navigate("history")} /><button className="start-fab" onClick={beginEmpty} aria-label="Start an empty workout"><Plus /></button><NavButton active={view === "progress"} icon={<FitnessIcon kind="chart" />} label="Progress" onClick={() => navigate("progress")} /><NavButton active={view === "more"} icon={<FitnessIcon kind="bag" />} label="More" onClick={() => navigate("more")} /></nav>;
 }
 
 function Metric({ label, value }: { label: string; value: string }) { return <div><span>{label}</span><strong>{value}</strong></div>; }
 function NavButton({ active, icon, label, onClick }: { active: boolean; icon: React.ReactNode; label: string; onClick: () => void }) { return <button className={active ? "active" : ""} onClick={onClick}>{icon}<span>{label}</span></button>; }
-function Empty({ title, detail }: { title: string; detail: string }) { return <div className="empty"><Dumbbell /><h2>{title}</h2><p>{detail}</p></div>; }
-function BarbellLogo() { return <svg className="barbell-logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 28v8M14 22v20M20 26v12M20 32h24M44 26v12M50 22v20M56 28v8" /></svg>; }
+function Empty({ title, detail }: { title: string; detail: string }) { return <div className="empty"><FitnessIcon kind="dumbbell" /><h2>{title}</h2><p>{detail}</p></div>; }
