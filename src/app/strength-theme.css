@@ -92,3 +92,34 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .split-options small { font-size: 16px; line-height: 1.4; }
 .week-grid .move-day button { font-size: 14px; }
 @media(max-width:390px) { .week-grid .move-day button { font-size: 13px; } }
+/* Finish setup with a centered, full-size barbell illustration. */
+.ready-screen {
+  justify-content: center;
+  gap: clamp(14px, 3vh, 28px);
+  padding: min(7vh, 72px) 0;
+}
+.ready-screen .big-barbell {
+  width: min(95%, 480px);
+  flex: 0 0 auto;
+}
+.ready-screen .big-barbell svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 13 / 5;
+}
+.ready-screen h1 {
+  margin: 0;
+  font-size: clamp(44px, 10vw, 62px);
+}
+.ready-screen p {
+  max-width: 440px;
+  margin: 0;
+  font-size: 17px;
+}
+.ready-screen .setup-cta {
+  width: min(100%, 440px);
+  min-height: 62px;
+  margin-top: clamp(28px, 5vh, 62px);
+  flex: 0 0 auto;
+}
