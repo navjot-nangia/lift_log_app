@@ -89,3 +89,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .week-grid .move-day button:disabled { color: #81828E; opacity: .65; }
 .week-grid .move-day svg { flex: 0 0 auto; width: 15px; height: 15px; }
 @media(max-width:390px) { .week-grid { gap: 9px; } .week-grid .planner-day { padding: 12px; } .week-grid .planner-day strong { font-size: 16px; } .week-grid .move-day button { font-size: 12px; } }
+.split-options small { font-size: 16px; line-height: 1.4; }
+.week-grid .move-day button { font-size: 14px; }
+@media(max-width:390px) { .week-grid .move-day button { font-size: 13px; } }
