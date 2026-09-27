@@ -34,6 +34,10 @@ function newData(): LiftLogData {
   return { sessions: [], routines: structuredClone(DEFAULT_ROUTINES), customExercises: [], settings: { ...DEFAULT_SETTINGS }, onboardingComplete: false, schedule: [] };
 }
 
+function convertSessionUnit(session: WorkoutSession, factor: number): WorkoutSession {
+  return { ...session, exercises: session.exercises.map((exercise) => ({ ...exercise, sets: exercise.sets.map((set) => ({ ...set, weight: Number((set.weight * factor).toFixed(2)) })) })) };
+}
+
 export default function LiftLogApp() {
   const [data, setData] = useState<LiftLogData>(newData);
   const [active, setActive] = useState<WorkoutSession | null>(null);
@@ -134,6 +138,15 @@ export default function LiftLogApp() {
     }));
   }
 
+  function changeUnit(next: "lb" | "kg") {
+    if (next === data.settings.unit) return;
+    const factor = next === "kg" ? 1 / 2.2046226218 : 2.2046226218;
+    setData((current) => ({ ...current, settings: { ...current.settings, unit: next, barWeight: Number((current.settings.barWeight * factor).toFixed(2)) }, sessions: current.sessions.map((session) => convertSessionUnit(session, factor)) }));
+    setActive((current) => current ? convertSessionUnit(current, factor) : null);
+    setSummarySession((current) => current ? convertSessionUnit(current, factor) : null);
+    setDeleted((current) => current ? convertSessionUnit(current, factor) : null);
+  }
+
   function toggleSet(exerciseIndex: number, setIndex: number) {
     if (!active) return;
     const set = active.exercises[exerciseIndex].sets[setIndex];
@@ -209,6 +222,7 @@ export default function LiftLogApp() {
       session={active} unit={data.settings.unit} exerciseNames={exerciseNames} sessions={data.sessions}
       restRemaining={restRemaining} restRunning={restEndsAt !== null}
       updateSession={setActive} updateExercise={updateExercise} updateSet={updateSet} toggleSet={toggleSet}
+      toggleUnit={() => changeUnit(data.settings.unit === "lb" ? "kg" : "lb")}
       startRest={startRest} pauseRest={pauseRest} resumeRest={resumeRest}
       resetRest={() => { setRestEndsAt(null); setRestRemaining(0); }}
       finish={finishWorkout} close={() => navigate("workout", true)}
@@ -219,7 +233,7 @@ export default function LiftLogApp() {
       return session ? <HistoryDetail session={session} unit={data.settings.unit} update={editSession} remove={() => deleteSession(session)} duplicate={() => duplicateSession(session)} back={() => navigate("history", true)} /> : <HistoryView sessions={data.sessions} unit={data.settings.unit} open={setSelectedSessionId} deleted={deleted} undoDelete={undoDelete} />;
     }
     if (view === "progress") return <ProgressView sessions={data.sessions} unit={data.settings.unit} exerciseNames={exerciseNames} />;
-    if (view === "more") return <MoreView data={data} setData={setData} exerciseNames={exerciseNames} notify={setNotice} />;
+    if (view === "more") return <MoreView data={data} setData={setData} exerciseNames={exerciseNames} notify={setNotice} changeUnit={changeUnit} />;
     if (view === "summary" && summarySession) return <SummaryView session={summarySession} unit={data.settings.unit} done={() => navigate("workout", true)} />;
     return <WorkoutHome data={data} draft={active} begin={beginRoutine} beginEmpty={beginEmpty} resume={() => navigate("active")} />;
   }
@@ -250,6 +264,7 @@ function WorkoutHome({ data, draft, begin, beginEmpty, resume }: { data: LiftLog
 
 type ActiveProps = {
   session: WorkoutSession; unit: string; exerciseNames: string[]; sessions: WorkoutSession[];
+  toggleUnit: () => void;
   restRemaining: number; restRunning: boolean;
   updateSession: React.Dispatch<React.SetStateAction<WorkoutSession | null>>;
   updateExercise: (index: number, updater: (exercise: WorkoutExercise) => WorkoutExercise) => void;
@@ -261,11 +276,21 @@ type ActiveProps = {
 
 function ActiveWorkout(props: ActiveProps) {
   const [exerciseIndex, setExerciseIndex] = useState(0);
+  const [focusedSetId, setFocusedSetId] = useState<string | null>(null);
+  const [weightStep, setWeightStep] = useState<number | null>(null);
   const [newExercise, setNewExercise] = useState(props.exerciseNames[0] ?? "Bench Press");
   const exercise = props.session.exercises[Math.min(exerciseIndex, props.session.exercises.length - 1)];
   const previous = props.sessions.find((session) => session.exercises.some((item) => item.name === exercise.name))?.exercises.find((item) => item.name === exercise.name);
   const nextSetIndex = Math.max(0, exercise.sets.findIndex((set) => !set.completed));
-  const adjustmentSetIndex = exercise.sets.every((set) => set.completed) ? Math.max(0, exercise.sets.length - 1) : nextSetIndex;
+  const focusedIndex = exercise.sets.findIndex((set) => set.id === focusedSetId);
+  const adjustmentSetIndex = focusedIndex >= 0 ? focusedIndex : exercise.sets.every((set) => set.completed) ? Math.max(0, exercise.sets.length - 1) : nextSetIndex;
+  const steps = props.unit === "kg" ? [1, 2.5, 5, 10, 20] : [2.5, 5, 10, 25, 45];
+  const step = weightStep && steps.includes(weightStep) ? weightStep : props.unit === "kg" ? 2.5 : 5;
+  const selectedSet = exercise.sets[adjustmentSetIndex];
+  function changeWeight(amount: number) {
+    if (!selectedSet) return;
+    props.updateSet(exerciseIndex, adjustmentSetIndex, { weight: Math.max(0, Number((selectedSet.weight + amount).toFixed(2))) });
+  }
 
   function addExercise() {
     if (props.session.exercises.some((item) => item.name === newExercise)) return;
@@ -284,13 +309,12 @@ function ActiveWorkout(props: ActiveProps) {
   return <div className="screen active-screen">
     <header className="workout-header"><button className="icon-button" onClick={props.close} aria-label="Pause workout"><ChevronLeft /></button><div><p className="eyebrow">WORKOUT · {exerciseIndex + 1}/{props.session.exercises.length}</p><h1>{props.session.routineName}</h1></div><button className="finish-button" onClick={props.finish}>Finish</button></header>
     <RestTimer seconds={props.restRemaining} running={props.restRunning} start={() => props.startRest(exercise.restSeconds)} pause={props.pauseRest} resume={props.resumeRest} reset={props.resetRest} adjust={(amount) => props.startRest(Math.max(0, props.restRemaining + amount))} />
-    <div className="exercise-tabs">{props.session.exercises.map((item, index) => <button key={item.id} className={index === exerciseIndex ? "active" : ""} onClick={() => setExerciseIndex(index)}>{item.name}<small>{item.sets.filter((set) => set.completed).length}/{item.sets.length}</small></button>)}</div>
+    <div className="exercise-tabs">{props.session.exercises.map((item, index) => <button key={item.id} className={index === exerciseIndex ? "active" : ""} onClick={() => { setExerciseIndex(index); setFocusedSetId(null); }}>{item.name}<small>{item.sets.filter((set) => set.completed).length}/{item.sets.length}</small></button>)}</div>
     <section className="lift-panel set-logger">
       <div className="exercise-heading"><div><span>Exercise</span><h2>{exercise.name}</h2></div><label>Rest<select value={exercise.restSeconds} onChange={(event) => props.updateExercise(exerciseIndex, (current) => ({ ...current, restSeconds: Number(event.target.value) }))}>{[30,45,60,90,120,150,180,240,300].map((seconds) => <option key={seconds} value={seconds}>{seconds < 60 ? seconds + " sec" : seconds / 60 + " min"}</option>)}</select></label></div>
       {previous && <div className="previous-strip"><span>Previous: {previous.sets.filter((set) => set.completed).map((set) => set.weight + "×" + set.reps).join(", ") || "No completed sets"}</span><button onClick={copyPrevious}><Copy />Copy</button></div>}
-      {exercise.sets.length > 0 && <div className="quick-weight"><span>Adjust set {adjustmentSetIndex + 1} weight</span><div>{[1,2.5,5,10,25,45].map((amount) => <button key={"minus-" + amount} onClick={() => props.updateSet(exerciseIndex, adjustmentSetIndex, { weight: Math.max(0, Number((exercise.sets[adjustmentSetIndex].weight - amount).toFixed(1))) })}>−{amount}</button>)}</div><div>{[1,2.5,5,10,25,45].map((amount) => <button key={"plus-" + amount} onClick={() => props.updateSet(exerciseIndex, adjustmentSetIndex, { weight: Number((exercise.sets[adjustmentSetIndex].weight + amount).toFixed(1)) })}>+{amount}</button>)}</div></div>}
-      <div className="set-table-heading"><span>Set</span><span>Type</span><span>Weight</span><span>Reps</span><span>Done</span></div>
-      <div className="set-list">{exercise.sets.map((set, setIndex) => <SetRow key={set.id} set={set} index={setIndex} unit={props.unit} update={(patch) => props.updateSet(exerciseIndex, setIndex, patch)} toggle={() => props.toggleSet(exerciseIndex, setIndex)} remove={() => props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: current.sets.filter((_, index) => index !== setIndex) }))} />)}</div>
+      {selectedSet && <div className="weight-control"><span className="weight-caption">Set {adjustmentSetIndex + 1} weight</span><div className="weight-main"><button type="button" onClick={() => changeWeight(-step)} aria-label={`Decrease set ${adjustmentSetIndex + 1} weight by ${step} ${props.unit}`}>−</button><label><input aria-label={`Set ${adjustmentSetIndex + 1} weight in ${props.unit}`} type="number" inputMode="decimal" min="0" step="any" value={selectedSet.weight} onChange={(event) => props.updateSet(exerciseIndex, adjustmentSetIndex, { weight: Math.max(0, Number(event.target.value)) })} /><span>{props.unit}</span></label><button type="button" onClick={() => changeWeight(step)} aria-label={`Increase set ${adjustmentSetIndex + 1} weight by ${step} ${props.unit}`}>+</button></div><div className="weight-step"><label>Change by <select value={step} onChange={(event) => setWeightStep(Number(event.target.value))}>{steps.map((amount) => <option key={amount} value={amount}>{amount} {props.unit}</option>)}</select></label><button type="button" className="unit-switch" onClick={props.toggleUnit}>Switch to {props.unit === "lb" ? "kg" : "lb"}</button></div></div>}
+      <div className="set-list">{exercise.sets.map((set, setIndex) => <SetRow key={set.id} set={set} index={setIndex} unit={props.unit} selected={setIndex === adjustmentSetIndex} select={() => setFocusedSetId(set.id)} update={(patch) => props.updateSet(exerciseIndex, setIndex, patch)} toggle={() => { props.toggleSet(exerciseIndex, setIndex); setFocusedSetId(null); }} remove={() => { setFocusedSetId(null); props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: current.sets.filter((_, index) => index !== setIndex) })); }} />)}</div>
       <button className="secondary-button" onClick={() => props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: [...current.sets, createWorkoutSet(current.sets.at(-1)?.weight ?? 0, current.targetReps)] }))}><Plus />Add set</button>
       <label className="notes-field">Exercise notes<textarea value={exercise.notes} placeholder="Technique, pain, equipment…" onChange={(event) => props.updateExercise(exerciseIndex, (current) => ({ ...current, notes: event.target.value }))} /></label>
     </section>
@@ -299,15 +323,10 @@ function ActiveWorkout(props: ActiveProps) {
   </div>;
 }
 
-function SetRow({ set, index, unit, update, toggle, remove }: { set: WorkoutSet; index: number; unit: string; update: (patch: Partial<WorkoutSet>) => void; toggle: () => void; remove: () => void }) {
-  return <div className={"set-row " + (set.completed ? "completed" : "")}>
-    <strong className="set-badge" aria-label={"Set " + (index + 1)}>{set.completed ? "✓" : index + 1}</strong>
-    <select aria-label={"Set " + (index + 1) + " type"} value={set.type} onChange={(event) => update({ type: event.target.value as SetType })}><option value="warm-up">Warm-up</option><option value="working">Main</option><option value="drop">Drop</option><option value="failure">Failure</option></select>
-    <label><input aria-label={"Set " + (index + 1) + " weight in " + unit} type="number" inputMode="decimal" min="0" step="0.5" value={set.weight} onChange={(event) => update({ weight: Math.max(0, Number(event.target.value)) })} /><small>{unit}</small></label>
-    <input aria-label={"Set " + (index + 1) + " reps"} type="number" inputMode="numeric" min="0" max="99" value={set.reps} onChange={(event) => update({ reps: Math.max(0, Number(event.target.value)) })} />
-    <button className="set-check" onClick={toggle} aria-label={(set.completed ? "Reopen" : "Complete") + " set " + (index + 1)}>{set.completed ? <Check /> : <span />}</button>
-    <button className="set-remove" onClick={remove} aria-label={"Remove set " + (index + 1)}><X /></button>
-    <div className="set-effort"><label>RPE<input aria-label={"Set " + (index + 1) + " RPE"} type="number" inputMode="decimal" min="1" max="10" step="0.5" placeholder="—" value={set.rpe ?? ""} onChange={(event) => update({ rpe: event.target.value ? Number(event.target.value) : undefined })} /></label><label>RIR<input aria-label={"Set " + (index + 1) + " reps in reserve"} type="number" inputMode="numeric" min="0" max="10" placeholder="—" value={set.rir ?? ""} onChange={(event) => update({ rir: event.target.value ? Number(event.target.value) : undefined })} /></label><input className="set-note" aria-label={"Set " + (index + 1) + " notes"} placeholder="Optional set note" value={set.notes ?? ""} onChange={(event) => update({ notes: event.target.value })} /></div>
+function SetRow({ set, index, unit, selected, select, update, toggle, remove }: { set: WorkoutSet; index: number; unit: string; selected: boolean; select: () => void; update: (patch: Partial<WorkoutSet>) => void; toggle: () => void; remove: () => void }) {
+  return <div className={"simple-set " + (set.completed ? "completed " : "") + (selected ? "selected" : "")}>
+    <div className="simple-set-main"><strong className="set-badge">{index + 1}</strong><button className="set-weight-select" type="button" onClick={select} aria-label={`Adjust set ${index + 1} weight`}>{set.weight} <small>{unit}</small></button><label className="reps-field"><input aria-label={`Set ${index + 1} reps`} type="number" inputMode="numeric" min="0" max="99" value={set.reps} onChange={(event) => update({ reps: Math.max(0, Number(event.target.value)) })} /><small>reps</small></label><button className="set-check" onClick={toggle} aria-label={(set.completed ? "Reopen" : "Complete") + " set " + (index + 1)}>{set.completed ? <Check /> : <span />}</button></div>
+    <details className="set-options"><summary>More set options</summary><div className="set-options-fields"><label>Type<select aria-label={`Set ${index + 1} type`} value={set.type} onChange={(event) => update({ type: event.target.value as SetType })}><option value="warm-up">Warm-up</option><option value="working">Main</option><option value="drop">Drop</option><option value="failure">Failure</option></select></label><label>RPE<input aria-label={`Set ${index + 1} RPE`} type="number" inputMode="decimal" min="1" max="10" step="0.5" placeholder="—" value={set.rpe ?? ""} onChange={(event) => update({ rpe: event.target.value ? Number(event.target.value) : undefined })} /></label><label>RIR<input aria-label={`Set ${index + 1} reps in reserve`} type="number" inputMode="numeric" min="0" max="10" placeholder="—" value={set.rir ?? ""} onChange={(event) => update({ rir: event.target.value ? Number(event.target.value) : undefined })} /></label><input className="set-note" aria-label={`Set ${index + 1} notes`} placeholder="Optional note" value={set.notes ?? ""} onChange={(event) => update({ notes: event.target.value })} /><button className="set-delete" onClick={remove}><Trash2 /> Remove set</button></div></details>
   </div>;
 }
 
@@ -361,7 +380,7 @@ function ProgressView({ sessions, unit, exerciseNames }: { sessions: WorkoutSess
   </div>;
 }
 
-function MoreView({ data, setData, exerciseNames, notify }: { data: LiftLogData; setData: React.Dispatch<React.SetStateAction<LiftLogData>>; exerciseNames: string[]; notify: (message: string) => void }) {
+function MoreView({ data, setData, exerciseNames, notify, changeUnit }: { data: LiftLogData; setData: React.Dispatch<React.SetStateAction<LiftLogData>>; exerciseNames: string[]; notify: (message: string) => void; changeUnit: (unit: "lb" | "kg") => void }) {
   const [customName, setCustomName] = useState("");
   const [newRoutineName, setNewRoutineName] = useState("");
 
@@ -381,7 +400,7 @@ function MoreView({ data, setData, exerciseNames, notify }: { data: LiftLogData;
   }
 
   return <div className="screen"><header className="topbar"><div><p className="eyebrow">SETTINGS</p><h1>More</h1></div><Settings2 /></header>
-    <section className="settings-card"><h2>Training settings</h2><div className="settings-grid"><label>Units<select value={data.settings.unit} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, unit: event.target.value as "lb" | "kg" } }))}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label><label>Bar weight<input type="number" value={data.settings.barWeight} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, barWeight: Number(event.target.value) } }))} /></label><label>Default rest<select value={data.settings.defaultRestSeconds} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, defaultRestSeconds: Number(event.target.value) } }))}>{[30,60,90,120,180,240].map((seconds) => <option key={seconds} value={seconds}>{seconds} sec</option>)}</select></label></div></section>
+    <section className="settings-card"><h2>Training settings</h2><div className="settings-grid"><label>Units<select value={data.settings.unit} onChange={(event) => changeUnit(event.target.value as "lb" | "kg")}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label><label>Bar weight<input type="number" value={data.settings.barWeight} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, barWeight: Number(event.target.value) } }))} /></label><label>Default rest<select value={data.settings.defaultRestSeconds} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, defaultRestSeconds: Number(event.target.value) } }))}>{[30,60,90,120,180,240].map((seconds) => <option key={seconds} value={seconds}>{seconds} sec</option>)}</select></label></div></section>
     <section className="settings-card"><h2>Weekly routine schedule</h2><p className="muted-copy">Drag days to swap them, or select a split for each day.</p><WeekPlanner data={data} update={setData} compact /><div className="schedule-exercises"><h3>Add your own exercise</h3><p className="muted-copy">Create an exercise here, then open a routine below to add it to that workout.</p><div className="add-line"><input value={customName} placeholder="Exercise name" aria-label="New exercise name" onChange={(event) => setCustomName(event.target.value)} /><button onClick={addCustom}><Plus />Add</button></div>{data.customExercises.length > 0 && <div className="tag-list">{data.customExercises.map((name) => <span key={name}>{name}<button aria-label={`Remove ${name}`} onClick={() => setData((current) => ({ ...current, customExercises: current.customExercises.filter((item) => item !== name) }))}><X /></button></span>)}</div>}</div></section>
     <section className="settings-card"><h2>Routine builder</h2><div className="add-line"><input value={newRoutineName} placeholder="New routine name" onChange={(event) => setNewRoutineName(event.target.value)} /><button onClick={addRoutine}><Plus />Create</button></div>{data.routines.map((routine, index) => <RoutineEditor key={routine.id} routine={routine} exerciseNames={exerciseNames} update={(updated) => setData((current) => ({ ...current, routines: current.routines.map((item, itemIndex) => itemIndex === index ? updated : item) }))} remove={() => setData((current) => ({ ...current, routines: current.routines.filter((item) => item.id !== routine.id) }))} />)}</section>
   </div>;

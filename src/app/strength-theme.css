@@ -59,6 +59,43 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .split-options > button:hover, .planner-day:focus-within, .routine-card:focus-visible { border-color: var(--accent); }
 .planner-day select, .planner-routine select, .set-row select { color-scheme: dark; }
 .set-remove, .routine-exercise-row button, .drag-handle { color: var(--muted); }
+
+/* Focused, one-set-at-a-time workout controls. */
+.weight-control { margin: 18px 0 22px; padding: 18px; border: 1px solid var(--line); border-radius: 19px; background: #1c1d28; }
+.weight-caption { display: block; text-align: center; color: var(--muted); font-size: 16px; font-weight: 750; }
+.weight-main { display: grid; grid-template-columns: 64px minmax(0,1fr) 64px; align-items: center; gap: 10px; margin: 14px 0 17px; }
+.weight-main > button { height: 64px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); font-size: 36px; line-height: 1; }
+.weight-main > button:active { transform: scale(.96); }
+.weight-main label { display: flex; align-items: baseline; justify-content: center; gap: 5px; min-width: 0; color: var(--muted); }
+.weight-main input { width: min(100%, 150px); min-width: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); font-size: clamp(36px, 10vw, 52px); font-weight: 800; text-align: center; appearance: textfield; }
+.weight-main input::-webkit-inner-spin-button { appearance: none; }
+.weight-main label span { font-size: 18px; }
+.weight-step { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 9px; }
+.weight-step label { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 14px; }
+.weight-step select { padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); font-size: 15px; font-weight: 750; }
+.unit-switch { min-height: 42px; padding: 8px 12px; border: 1px solid #67404c; border-radius: 10px; background: var(--soft); color: #e0a5b1; font-size: 14px; font-weight: 750; }
+.set-list { gap: 10px; }
+.simple-set { padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: #1c1d28; }
+.simple-set.selected { border-color: #a3596b; }
+.simple-set.completed { background: #30252b; }
+.simple-set-main { display: grid; grid-template-columns: 36px minmax(0,1fr) 84px 48px; align-items: center; gap: 9px; }
+.simple-set .set-badge { width: 36px; height: 36px; font-size: 17px; }
+.set-weight-select { min-width: 0; min-height: 48px; padding: 0 10px; border: 1px solid var(--line); border-radius: 11px; background: var(--card); color: var(--ink); font-size: 22px; font-weight: 800; text-align: left; }
+.set-weight-select small { font-size: 13px; color: var(--muted); }
+.reps-field { position: relative; display: block !important; }
+.reps-field input { width: 100%; height: 48px; padding: 5px 7px 18px; border: 1px solid var(--line); border-radius: 11px; background: var(--card); color: var(--ink); font-size: 20px; font-weight: 750; text-align: center; }
+.reps-field small { position: absolute; bottom: 3px; left: 0; width: 100%; color: var(--muted); font-size: 11px; text-align: center; }
+.simple-set .set-check { width: 48px; height: 48px; background: var(--card); border-color: var(--line); }
+.simple-set.completed .set-check { background: var(--accent); border-color: var(--accent); }
+.set-options { margin: 9px 0 0 45px; color: var(--muted); font-size: 13px; }
+.set-options summary { width: max-content; padding: 7px 0; cursor: pointer; }
+.set-options-fields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; padding: 9px 0 2px; }
+.set-options-fields label { display: grid; gap: 5px; font-size: 12px; }
+.set-options-fields input, .set-options-fields select { width: 100%; min-width: 0; height: 40px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); color: var(--ink); font-size: 15px; }
+.set-options-fields .set-note { grid-column: 1/-1; }
+.set-delete { grid-column: 1/-1; display: flex; align-items: center; gap: 6px; width: max-content; min-height: 40px; border: 0; background: transparent; color: #da8798; }
+.set-delete svg { width: 17px; }
+@media(max-width:390px) { .weight-main { grid-template-columns: 54px minmax(0,1fr) 54px; gap: 6px; } .weight-main > button { height: 56px; } .simple-set-main { grid-template-columns: 32px minmax(0,1fr) 72px 44px; gap: 5px; } .simple-set .set-check { width: 44px; } .set-options { margin-left: 37px; } }
 /* First-run exercise review and spacious two-column week */
 .setup-page { width: min(100%, 720px); }
 .setup-page .setup-intro { font-size: 16px; line-height: 1.5; margin: 8px 0 20px; }
