@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import RoutineSetup, { WeekPlanner } from "./RoutineSetup";
 import {
   BarChart3, Check, ChevronLeft, Clock3, Copy, Download, Dumbbell, History, Home,
   Pause, Play, Plus, RotateCcw, Settings2, TimerReset, Trash2, Trophy, Upload, X,
@@ -30,7 +31,7 @@ function formatVolume(value: number) {
 }
 
 function newData(): LiftLogData {
-  return { sessions: [], routines: structuredClone(DEFAULT_ROUTINES), customExercises: [], settings: { ...DEFAULT_SETTINGS } };
+  return { sessions: [], routines: structuredClone(DEFAULT_ROUTINES), customExercises: [], settings: { ...DEFAULT_SETTINGS }, onboardingComplete: false, schedule: [] };
 }
 
 export default function LiftLogApp() {
@@ -223,6 +224,9 @@ export default function LiftLogApp() {
     return <WorkoutHome data={data} draft={active} begin={beginRoutine} beginEmpty={beginEmpty} resume={() => navigate("active")} />;
   }
 
+  if (!ready) return <main className="app-shell" />;
+  if (!data.onboardingComplete) return <main className="app-shell"><RoutineSetup initial={data} complete={(updated) => { setData(updated); navigate("workout"); }} /></main>;
+
   return <main className="app-shell">
     {notice && <div className="notice" role="status">{notice}{deleted && <button onClick={undoDelete}>Undo</button>}</div>}
     <div key={view} className={"page-stage " + (direction < 0 ? "slide-back" : "slide-forward")}>{currentScreen()}</div>
@@ -237,6 +241,7 @@ function WorkoutHome({ data, draft, begin, beginEmpty, resume }: { data: LiftLog
     <header className="topbar"><div><p className="eyebrow">LIFT LOG</p><h1>Start a workout</h1></div><div className="brand-mark"><BarbellLogo /></div></header>
     {draft && <button className="resume-card" onClick={resume}><Play /><span><strong>Resume {draft.routineName}</strong><small>{completedSets(draft).length} completed sets</small></span></button>}
     <section className="week-card"><div><span>This week</span><strong>{thisWeek}</strong><small>completed workouts</small></div><div className="week-bars">{[38,72,50,92,61,28,46].map((height,index) => <i key={index} style={{ height: height + "%" }} />)}</div></section>
+    {data.schedule?.length ? <section className="today-card"><span>Today · {new Date().toLocaleDateString(undefined, { weekday: "long" })}</span>{(() => { const today = (new Date().getDay() + 6) % 7; const id = data.schedule?.find((item) => item.day === today)?.routineId; const routine = data.routines.find((item) => item.id === id); return routine ? <button onClick={() => begin(routine)}>Start {routine.name} <Plus /></button> : <strong>Rest day</strong>; })()}</section> : null}
     <div className="section-heading"><h2>My routines</h2><button onClick={beginEmpty}>Empty workout</button></div>
     <div className="routine-list">{data.routines.map((routine) => <button className="routine-card" key={routine.id} onClick={() => begin(routine)}><div className="routine-icon"><Dumbbell /></div><div><strong>{routine.name}</strong><span>{routine.exercises.length} exercises · {routine.exercises.reduce((sum, exercise) => sum + exercise.targetSets, 0)} sets</span></div><Plus /></button>)}</div>
     {data.sessions[0] && <><div className="section-heading"><h2>Last workout</h2><span>{formatDate(data.sessions[0].startedAt)}</span></div><button className="last-card session-link"><strong>{data.sessions[0].routineName}</strong><p>{data.sessions[0].exercises.length} exercises · {completedSets(data.sessions[0]).length} sets · {sessionDurationMinutes(data.sessions[0])} min</p></button></>}
@@ -296,8 +301,8 @@ function ActiveWorkout(props: ActiveProps) {
 
 function SetRow({ set, index, unit, update, toggle, remove }: { set: WorkoutSet; index: number; unit: string; update: (patch: Partial<WorkoutSet>) => void; toggle: () => void; remove: () => void }) {
   return <div className={"set-row " + (set.completed ? "completed" : "")}>
-    <strong>{index + 1}</strong>
-    <select aria-label={"Set " + (index + 1) + " type"} value={set.type} onChange={(event) => update({ type: event.target.value as SetType })}><option value="warm-up">Warm-up</option><option value="working">Working</option><option value="drop">Drop</option><option value="failure">Failure</option></select>
+    <strong className="set-badge" aria-label={"Set " + (index + 1)}>{set.completed ? "✓" : index + 1}</strong>
+    <select aria-label={"Set " + (index + 1) + " type"} value={set.type} onChange={(event) => update({ type: event.target.value as SetType })}><option value="warm-up">Warm-up</option><option value="working">Main</option><option value="drop">Drop</option><option value="failure">Failure</option></select>
     <label><input aria-label={"Set " + (index + 1) + " weight in " + unit} type="number" inputMode="decimal" min="0" step="0.5" value={set.weight} onChange={(event) => update({ weight: Math.max(0, Number(event.target.value)) })} /><small>{unit}</small></label>
     <input aria-label={"Set " + (index + 1) + " reps"} type="number" inputMode="numeric" min="0" max="99" value={set.reps} onChange={(event) => update({ reps: Math.max(0, Number(event.target.value)) })} />
     <button className="set-check" onClick={toggle} aria-label={(set.completed ? "Reopen" : "Complete") + " set " + (index + 1)}>{set.completed ? <Check /> : <span />}</button>
@@ -394,6 +399,7 @@ function MoreView({ data, setData, exerciseNames, notify }: { data: LiftLogData;
 
   return <div className="screen"><header className="topbar"><div><p className="eyebrow">CUSTOMIZE</p><h1>More</h1></div><Settings2 /></header>
     <section className="settings-card"><h2>Training settings</h2><div className="settings-grid"><label>Units<select value={data.settings.unit} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, unit: event.target.value as "lb" | "kg" } }))}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label><label>Bar weight<input type="number" value={data.settings.barWeight} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, barWeight: Number(event.target.value) } }))} /></label><label>Default rest<select value={data.settings.defaultRestSeconds} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, defaultRestSeconds: Number(event.target.value) } }))}>{[30,60,90,120,180,240].map((seconds) => <option key={seconds} value={seconds}>{seconds} sec</option>)}</select></label></div></section>
+    <section className="settings-card"><h2>Weekly routine schedule</h2><p className="muted-copy">Drag days to swap them, or select a split for each day.</p><WeekPlanner data={data} update={setData} compact /></section>
     <section className="settings-card"><h2>Plate calculator</h2><label className="inline-field">Target weight<input type="number" value={plateTarget} onChange={(event) => setPlateTarget(Number(event.target.value))} /><small>{data.settings.unit}</small></label><p className="plate-result">{plateTarget <= data.settings.barWeight ? "Bar only" : plateResult.length ? "Each side: " + plateResult.map((item) => item.count + "×" + item.plate).join(" + ") + (remaining > 0.01 ? " · " + remaining.toFixed(2) + " remaining" : "") : "No matching plates"}</p></section>
     <section className="settings-card"><h2>Custom exercises</h2><div className="add-line"><input value={customName} placeholder="Exercise name" onChange={(event) => setCustomName(event.target.value)} /><button onClick={addCustom}><Plus />Add</button></div>{data.customExercises.length > 0 && <div className="tag-list">{data.customExercises.map((name) => <span key={name}>{name}<button onClick={() => setData((current) => ({ ...current, customExercises: current.customExercises.filter((item) => item !== name) }))}><X /></button></span>)}</div>}</section>
     <section className="settings-card"><h2>Routine builder</h2><div className="add-line"><input value={newRoutineName} placeholder="New routine name" onChange={(event) => setNewRoutineName(event.target.value)} /><button onClick={addRoutine}><Plus />Create</button></div>{data.routines.map((routine, index) => <RoutineEditor key={routine.id} routine={routine} exerciseNames={exerciseNames} update={(updated) => setData((current) => ({ ...current, routines: current.routines.map((item, itemIndex) => itemIndex === index ? updated : item) }))} remove={() => setData((current) => ({ ...current, routines: current.routines.filter((item) => item.id !== routine.id) }))} />)}</section>

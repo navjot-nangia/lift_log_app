@@ -53,7 +53,13 @@ export type AppSettings = {
   defaultRestSeconds: number;
 };
 
+export type ScheduledDay = { day: number; routineId: string | null };
+
+export const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 export type LiftLogData = {
+  onboardingComplete?: boolean;
+  schedule?: ScheduledDay[];
   sessions: WorkoutSession[];
   routines: Routine[];
   customExercises: string[];
@@ -172,15 +178,17 @@ export function loadData(): LiftLogData {
       const parsed = JSON.parse(saved) as Partial<LiftLogData>;
       return {
         sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+        onboardingComplete: parsed.onboardingComplete === true,
+        schedule: Array.isArray(parsed.schedule) ? parsed.schedule : [],
         routines: Array.isArray(parsed.routines) && parsed.routines.length ? parsed.routines : structuredClone(DEFAULT_ROUTINES),
         customExercises: Array.isArray(parsed.customExercises) ? parsed.customExercises : [],
         settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
       };
     }
     const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) ?? "[]") as LegacyEntry[];
-    return { sessions: migrateLegacy(legacy), routines: structuredClone(DEFAULT_ROUTINES), customExercises: [], settings: { ...DEFAULT_SETTINGS } };
+    return { sessions: migrateLegacy(legacy), onboardingComplete: false, schedule: [], routines: structuredClone(DEFAULT_ROUTINES), customExercises: [], settings: { ...DEFAULT_SETTINGS } };
   } catch {
-    return { sessions: [], routines: structuredClone(DEFAULT_ROUTINES), customExercises: [], settings: { ...DEFAULT_SETTINGS } };
+    return { sessions: [], onboardingComplete: false, schedule: [], routines: structuredClone(DEFAULT_ROUTINES), customExercises: [], settings: { ...DEFAULT_SETTINGS } };
   }
 }
 
@@ -200,5 +208,5 @@ export function saveDraft(session: WorkoutSession | null) {
 export function parseImport(value: string): LiftLogData {
   const parsed = JSON.parse(value) as LiftLogData;
   if (!Array.isArray(parsed.sessions) || !Array.isArray(parsed.routines) || !parsed.settings) throw new Error("Invalid Lift Log backup");
-  return { sessions: parsed.sessions, routines: parsed.routines, customExercises: parsed.customExercises ?? [], settings: { ...DEFAULT_SETTINGS, ...parsed.settings } };
+  return { sessions: parsed.sessions, onboardingComplete: parsed.onboardingComplete ?? true, schedule: Array.isArray(parsed.schedule) ? parsed.schedule : [], routines: parsed.routines, customExercises: parsed.customExercises ?? [], settings: { ...DEFAULT_SETTINGS, ...parsed.settings } };
 }
