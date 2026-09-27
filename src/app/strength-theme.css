@@ -91,6 +91,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .simple-set.completed .set-check { background: var(--accent); border-color: var(--accent); color: #fff; }
 .active-screen .notes-field { margin-top: 22px; gap: 12px; font-size: 22px; font-weight: 750; color: var(--ink); }
 .active-screen .notes-field textarea { min-height: 104px; padding: 15px; font-size: 18px; line-height: 1.4; font-weight: 500; }
+.finish-workout-button { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 62px; margin: 24px 0 10px; border: 0; border-radius: 16px; background: var(--accent); color: #fff; font-size: 20px; font-weight: 800; }
+.finish-workout-button svg { width: 23px; height: 23px; stroke-width: 3; }
 .set-options { margin: 9px 0 0 45px; color: var(--muted); font-size: 13px; }
 .set-options summary { width: max-content; padding: 7px 0; cursor: pointer; }
 .set-options-fields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; padding: 9px 0 2px; }

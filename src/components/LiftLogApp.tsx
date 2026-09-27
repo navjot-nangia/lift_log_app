@@ -307,7 +307,7 @@ function ActiveWorkout(props: ActiveProps) {
   }
 
   return <div className="screen active-screen">
-    <header className="workout-header"><button className="icon-button" onClick={props.close} aria-label="Pause workout"><ChevronLeft /></button><div><p className="eyebrow">WORKOUT · {exerciseIndex + 1}/{props.session.exercises.length}</p><h1>{props.session.routineName}</h1></div><button className="finish-button" onClick={props.finish}>Finish</button></header>
+    <header className="workout-header"><button className="icon-button" onClick={props.close} aria-label="Pause workout"><ChevronLeft /></button><div><p className="eyebrow">WORKOUT · {exerciseIndex + 1}/{props.session.exercises.length}</p><h1>{props.session.routineName}</h1></div></header>
     <RestTimer seconds={props.restRemaining} running={props.restRunning} start={() => props.startRest(exercise.restSeconds)} pause={props.pauseRest} resume={props.resumeRest} reset={props.resetRest} adjust={(amount) => props.startRest(Math.max(0, props.restRemaining + amount))} />
     <div className="exercise-tabs">{props.session.exercises.map((item, index) => <button key={item.id} className={index === exerciseIndex ? "active" : ""} onClick={() => { setExerciseIndex(index); setFocusedSetId(null); }}>{item.name}<small>{item.sets.filter((set) => set.completed).length}/{item.sets.length}</small></button>)}</div>
     <section className="lift-panel set-logger">
@@ -320,6 +320,7 @@ function ActiveWorkout(props: ActiveProps) {
     </section>
     <section className="add-exercise-bar"><select value={newExercise} onChange={(event) => setNewExercise(event.target.value)}>{props.exerciseNames.map((name) => <option key={name}>{name}</option>)}</select><button onClick={addExercise}><Plus />Add exercise</button></section>
     <label className="notes-field workout-notes">Workout notes<textarea value={props.session.notes} placeholder="How did the workout feel?" onChange={(event) => props.updateSession((current) => current ? { ...current, notes: event.target.value } : current)} /></label>
+    <button className="finish-workout-button" onClick={props.finish}><Check />Finish workout</button>
   </div>;
 }
 

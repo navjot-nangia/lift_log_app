@@ -1,4 +1,4 @@
-const CACHE = "lift-log-v13";
+const CACHE = "lift-log-v14";
 const BASE = new URL(self.registration.scope).pathname.replace(/\/$/, "");
 const SHELL = [`${BASE}/`, `${BASE}/manifest.webmanifest`, `${BASE}/icon.svg`, `${BASE}/icon-180.png`, `${BASE}/icon-192.png`, `${BASE}/icon-512.png`];
 self.addEventListener("install", (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())));
