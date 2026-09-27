@@ -563,6 +563,19 @@
 
 .settings-card + .settings-card { margin-top: 11px; }
 
+.schedule-exercises {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.schedule-exercises h3 {
+  margin: 0 0 7px;
+  font-size: 17px;
+}
+
+.schedule-exercises .muted-copy { margin: 0 0 14px; }
+
 .settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

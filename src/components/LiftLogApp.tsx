@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import RoutineSetup, { WeekPlanner } from "./RoutineSetup";
 import {
-  BarChart3, Check, ChevronLeft, Clock3, Copy, Download, Dumbbell, History, Home,
-  Pause, Play, Plus, RotateCcw, Settings2, TimerReset, Trash2, Trophy, Upload, X,
+  BarChart3, Check, ChevronLeft, Clock3, Copy, Dumbbell, History, Home,
+  Pause, Play, Plus, RotateCcw, Settings2, TimerReset, Trash2, Trophy, X,
 } from "lucide-react";
 import {
   DEFAULT_ROUTINES, DEFAULT_SETTINGS, allExerciseNames, completedSets, createSession,
-  createWorkoutSet, estimatedOneRepMax, loadData, loadDraft, makeId, parseImport,
+  createWorkoutSet, estimatedOneRepMax, loadData, loadDraft, makeId,
   saveData, saveDraft, sessionDurationMinutes, sessionVolume,
   type LiftLogData, type Routine, type RoutineExercise, type SetType,
   type WorkoutExercise, type WorkoutSession, type WorkoutSet,
@@ -363,11 +363,7 @@ function ProgressView({ sessions, unit, exerciseNames }: { sessions: WorkoutSess
 
 function MoreView({ data, setData, exerciseNames, notify }: { data: LiftLogData; setData: React.Dispatch<React.SetStateAction<LiftLogData>>; exerciseNames: string[]; notify: (message: string) => void }) {
   const [customName, setCustomName] = useState("");
-  const [plateTarget, setPlateTarget] = useState(data.settings.barWeight);
   const [newRoutineName, setNewRoutineName] = useState("");
-  const plates = [45, 25, 10, 5, 2.5, 1.25];
-  let remaining = Math.max(0, (plateTarget - data.settings.barWeight) / 2);
-  const plateResult = plates.map((plate) => { const count = Math.floor((remaining + 0.001) / plate); remaining -= count * plate; return { plate, count }; }).filter((item) => item.count > 0);
 
   function addCustom() {
     const clean = customName.trim();
@@ -384,26 +380,10 @@ function MoreView({ data, setData, exerciseNames, notify }: { data: LiftLogData;
     setNewRoutineName("");
   }
 
-  function exportBackup() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url; anchor.download = "lift-log-backup.json"; anchor.click();
-    URL.revokeObjectURL(url);
-  }
-
-  async function importBackup(file?: File) {
-    if (!file) return;
-    try { setData(parseImport(await file.text())); notify("Backup imported"); } catch { notify("That file is not a valid Lift Log backup"); }
-  }
-
-  return <div className="screen"><header className="topbar"><div><p className="eyebrow">CUSTOMIZE</p><h1>More</h1></div><Settings2 /></header>
+  return <div className="screen"><header className="topbar"><div><p className="eyebrow">SETTINGS</p><h1>More</h1></div><Settings2 /></header>
     <section className="settings-card"><h2>Training settings</h2><div className="settings-grid"><label>Units<select value={data.settings.unit} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, unit: event.target.value as "lb" | "kg" } }))}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label><label>Bar weight<input type="number" value={data.settings.barWeight} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, barWeight: Number(event.target.value) } }))} /></label><label>Default rest<select value={data.settings.defaultRestSeconds} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, defaultRestSeconds: Number(event.target.value) } }))}>{[30,60,90,120,180,240].map((seconds) => <option key={seconds} value={seconds}>{seconds} sec</option>)}</select></label></div></section>
-    <section className="settings-card"><h2>Weekly routine schedule</h2><p className="muted-copy">Drag days to swap them, or select a split for each day.</p><WeekPlanner data={data} update={setData} compact /></section>
-    <section className="settings-card"><h2>Plate calculator</h2><label className="inline-field">Target weight<input type="number" value={plateTarget} onChange={(event) => setPlateTarget(Number(event.target.value))} /><small>{data.settings.unit}</small></label><p className="plate-result">{plateTarget <= data.settings.barWeight ? "Bar only" : plateResult.length ? "Each side: " + plateResult.map((item) => item.count + "×" + item.plate).join(" + ") + (remaining > 0.01 ? " · " + remaining.toFixed(2) + " remaining" : "") : "No matching plates"}</p></section>
-    <section className="settings-card"><h2>Custom exercises</h2><div className="add-line"><input value={customName} placeholder="Exercise name" onChange={(event) => setCustomName(event.target.value)} /><button onClick={addCustom}><Plus />Add</button></div>{data.customExercises.length > 0 && <div className="tag-list">{data.customExercises.map((name) => <span key={name}>{name}<button onClick={() => setData((current) => ({ ...current, customExercises: current.customExercises.filter((item) => item !== name) }))}><X /></button></span>)}</div>}</section>
+    <section className="settings-card"><h2>Weekly routine schedule</h2><p className="muted-copy">Drag days to swap them, or select a split for each day.</p><WeekPlanner data={data} update={setData} compact /><div className="schedule-exercises"><h3>Add your own exercise</h3><p className="muted-copy">Create an exercise here, then open a routine below to add it to that workout.</p><div className="add-line"><input value={customName} placeholder="Exercise name" aria-label="New exercise name" onChange={(event) => setCustomName(event.target.value)} /><button onClick={addCustom}><Plus />Add</button></div>{data.customExercises.length > 0 && <div className="tag-list">{data.customExercises.map((name) => <span key={name}>{name}<button aria-label={`Remove ${name}`} onClick={() => setData((current) => ({ ...current, customExercises: current.customExercises.filter((item) => item !== name) }))}><X /></button></span>)}</div>}</div></section>
     <section className="settings-card"><h2>Routine builder</h2><div className="add-line"><input value={newRoutineName} placeholder="New routine name" onChange={(event) => setNewRoutineName(event.target.value)} /><button onClick={addRoutine}><Plus />Create</button></div>{data.routines.map((routine, index) => <RoutineEditor key={routine.id} routine={routine} exerciseNames={exerciseNames} update={(updated) => setData((current) => ({ ...current, routines: current.routines.map((item, itemIndex) => itemIndex === index ? updated : item) }))} remove={() => setData((current) => ({ ...current, routines: current.routines.filter((item) => item.id !== routine.id) }))} />)}</section>
-    <section className="settings-card"><h2>Data backup</h2><p className="muted-copy">Your data stays on this device. Export a backup before removing the app or clearing browser data.</p><div className="detail-actions"><button onClick={exportBackup}><Download />Export JSON</button><label className="file-button"><Upload />Import JSON<input type="file" accept="application/json" onChange={(event) => void importBackup(event.target.files?.[0])} /></label></div></section>
   </div>;
 }
 
