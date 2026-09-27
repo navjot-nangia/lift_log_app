@@ -1,4 +1,4 @@
-export const BASE_EXERCISES = ["Bench Press", "Back Squat", "Deadlift", "Overhead Press", "Barbell Row", "Pull-up"];
+export const BASE_EXERCISES = ["Bench Press", "Back Squat", "Deadlift", "Overhead Press", "Barbell Row", "Pull-up", "Lat Pulldown", "Biceps Curl", "Hammer Curl", "Triceps Pushdown", "Leg Press", "Lunge"];
 
 export type Unit = "lb" | "kg";
 export type SetType = "warm-up" | "working" | "drop" | "failure";

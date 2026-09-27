@@ -59,3 +59,33 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .split-options > button:hover, .planner-day:focus-within, .routine-card:focus-visible { border-color: var(--accent); }
 .planner-day select, .planner-routine select, .set-row select { color-scheme: dark; }
 .set-remove, .routine-exercise-row button, .drag-handle { color: var(--muted); }
+/* First-run exercise review and spacious two-column week */
+.setup-page { width: min(100%, 720px); }
+.setup-page .setup-intro { font-size: 16px; line-height: 1.5; margin: 8px 0 20px; }
+.setup-page .eyebrow { font-size: 14px; }
+.setup-page .primary-button:disabled { opacity: .5; cursor: not-allowed; }
+.split-review { display: grid; gap: 14px; margin-bottom: 14px; }
+.review-card { padding: 17px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); }
+.review-title { display: grid; grid-template-columns: minmax(0,1fr) 42px; align-items: center; gap: 8px; }
+.review-title input { width: 100%; min-width: 0; padding: 3px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); font-size: 22px; font-weight: 800; }
+.review-title button, .review-exercises button { display: grid; place-items: center; min-width: 42px; min-height: 42px; border: 0; border-radius: 10px; background: #352831; color: var(--muted); }
+.review-title svg, .review-exercises svg { width: 18px; }
+.review-exercises { list-style: none; display: grid; gap: 8px; margin: 16px 0; padding: 0; }
+.review-exercises li { display: grid; grid-template-columns: 30px minmax(0,1fr) 42px; gap: 8px; align-items: center; }
+.review-exercises li > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--soft); color: #D98293; font-size: 16px; font-weight: 800; }
+.review-exercises select, .review-add input { width: 100%; min-width: 0; height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: #1C1D28; color: var(--ink); font-size: 16px; }
+.review-add { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+.review-add button { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 46px; padding: 0 14px; border: 0; border-radius: 10px; background: var(--soft); color: #D98293; font-size: 15px; font-weight: 800; }
+.review-add svg { width: 17px; }
+.review-empty { color: var(--muted); font-size: 16px; }
+.week-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.week-grid .planner-day { display: flex; flex-direction: column; align-items: stretch; min-width: 0; min-height: 160px; gap: 12px; padding: 15px; border-radius: 18px; }
+.day-heading { display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+.week-grid .planner-day strong { font-size: 17px; line-height: 1.2; }
+.week-grid .planner-day select { width: 100%; min-height: 44px; padding: 9px 8px; border: 1px solid var(--line); background: #1C1D28; color: var(--ink); font-size: 15px; }
+.week-grid .drag-handle { flex: 0 0 auto; width: 19px; height: 19px; }
+.week-grid .move-day { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: auto; }
+.week-grid .move-day button { display: flex; align-items: center; justify-content: center; gap: 2px; min-height: 34px; height: auto; padding: 4px 0; border: 1px solid var(--line); border-radius: 8px; color: #D98293; font-size: 13px; font-weight: 700; }
+.week-grid .move-day button:disabled { color: #81828E; opacity: .65; }
+.week-grid .move-day svg { flex: 0 0 auto; width: 15px; height: 15px; }
+@media(max-width:390px) { .week-grid { gap: 9px; } .week-grid .planner-day { padding: 12px; } .week-grid .planner-day strong { font-size: 16px; } .week-grid .move-day button { font-size: 12px; } }
