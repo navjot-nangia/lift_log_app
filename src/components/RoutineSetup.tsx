@@ -109,5 +109,5 @@ export default function RoutineSetup({ initial, complete }: { initial: LiftLogDa
 }
 
 function OrbitArt() {
-  return <div className="orbit-art" aria-hidden="true"><div className="orbit-ring orbit-one"><span><FitnessIcon kind="dumbbell" /></span><span><FitnessIcon kind="plate" /></span><span><FitnessIcon kind="treadmill" /></span></div><div className="orbit-ring orbit-two"><span><FitnessIcon kind="bike" /></span><span><FitnessIcon kind="rack" /></span><span><FitnessIcon kind="bag" /></span></div><div className="orbit-core"><FitnessIcon kind="barbell" /><strong>LIFT LOG</strong></div></div>;
+  return <div className="orbit-art" aria-hidden="true"><div className="orbit-ring orbit-one"><span><FitnessIcon kind="dumbbell" /></span><span><FitnessIcon kind="treadmill" /></span><span><FitnessIcon kind="bench" /></span></div><div className="orbit-ring orbit-two"><span><FitnessIcon kind="kettlebell" /></span><span><FitnessIcon kind="bike" /></span><span><FitnessIcon kind="ropes" /></span></div><div className="orbit-core"><FitnessIcon kind="barbell" /><strong>LIFT LOG</strong></div></div>;
 }
