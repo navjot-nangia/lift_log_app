@@ -17,7 +17,7 @@ export function FitnessIcon({ kind, className = "" }: { kind: FitnessKind; class
 }
 
 export function LiftingPerson() {
-  return <svg className="lifting-person" viewBox="0 0 240 260" role="img" aria-label="Person lifting dumbbells">
+  return <svg className="lifting-person" viewBox="0 0 240 260" role="img" aria-label="Person pressing dumbbells overhead">
     <ellipse cx="120" cy="242" rx="85" ry="9" fill="#A98BE7" opacity=".2" />
     <path d="M105 171l-8 60h17l13-48m8-12 8 60h17l-8-60" fill="#687D95" stroke="#687D95" strokeWidth="8" strokeLinejoin="round" />
     <path d="M90 226h27v10H85q-4 0-2-5zm56 0h27l4 10h-31z" fill="#3B4B61" />
@@ -26,9 +26,10 @@ export function LiftingPerson() {
     <rect x="111" y="84" width="18" height="18" rx="6" fill="#DDA687" />
     <circle cx="120" cy="62" r="29" fill="#E8B38F" />
     <path d="M92 61q-4-31 26-33 30-1 31 29-14-5-21-15-10 14-36 19" fill="#4D6472" />
+    <path d="M93 54q22-16 49-4" fill="none" stroke="#E97890" strokeWidth="5" strokeLinecap="round" />
     <circle cx="109" cy="65" r="2" fill="#4D6472" /><circle cx="131" cy="65" r="2" fill="#4D6472" />
     <path d="M115 78q5 4 10 0" fill="none" stroke="#AD7163" strokeWidth="2" strokeLinecap="round" />
-    <g className="lifter-arm lifter-arm-left"><path d="M90 111Q76 125 58 150" fill="none" stroke="#E8B38F" strokeWidth="15" strokeLinecap="round" /><rect x="31" y="145" width="52" height="9" rx="4" fill="#A98BE7" /><rect x="30" y="138" width="9" height="23" rx="3" fill="#526C79" /><rect x="75" y="138" width="9" height="23" rx="3" fill="#526C79" /></g>
-    <g className="lifter-arm lifter-arm-right"><path d="M150 111Q164 125 182 150" fill="none" stroke="#E8B38F" strokeWidth="15" strokeLinecap="round" /><rect x="157" y="145" width="52" height="9" rx="4" fill="#A98BE7" /><rect x="156" y="138" width="9" height="23" rx="3" fill="#526C79" /><rect x="201" y="138" width="9" height="23" rx="3" fill="#526C79" /></g>
+    <g className="lifter-arm lifter-arm-left"><path d="M90 111Q76 125 58 150" fill="none" stroke="#E8B38F" strokeWidth="15" strokeLinecap="round" /><path d="M62 139l-8 7" stroke="#F8F1E8" strokeWidth="9" strokeLinecap="round" /><rect x="31" y="145" width="52" height="9" rx="4" fill="#A98BE7" /><rect x="30" y="138" width="9" height="23" rx="3" fill="#526C79" /><rect x="75" y="138" width="9" height="23" rx="3" fill="#526C79" /></g>
+    <g className="lifter-arm lifter-arm-right"><path d="M150 111Q164 125 182 150" fill="none" stroke="#E8B38F" strokeWidth="15" strokeLinecap="round" /><path d="M178 139l8 7" stroke="#F8F1E8" strokeWidth="9" strokeLinecap="round" /><rect x="157" y="145" width="52" height="9" rx="4" fill="#A98BE7" /><rect x="156" y="138" width="9" height="23" rx="3" fill="#526C79" /><rect x="201" y="138" width="9" height="23" rx="3" fill="#526C79" /></g>
   </svg>;
 }

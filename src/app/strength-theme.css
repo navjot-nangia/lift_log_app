@@ -180,10 +180,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .bottom-nav > button.active .fitness-icon { filter: drop-shadow(0 0 5px #e9789055); transform: scale(1.13); }
 .orbit-ring span .fitness-icon { width: 32px; height: 32px; }
 .orbit-core .fitness-icon { width: 55%; height: 55%; fill: none; stroke: none; }
-.ready-screen .lifting-person { display: block; width: min(76vw, 330px); height: auto; flex: 0 0 auto; overflow: visible; }
+.ready-art { display: grid; place-items: center; width: min(90vw, 420px); min-height: min(45vh, 390px); border-radius: 50%; background: radial-gradient(circle, #804b59 0%, #573743 45%, #352831 70%, transparent 72%); }
+.ready-screen .lifting-person { display: block; width: min(70vw, 310px); height: auto; flex: 0 0 auto; overflow: visible; }
 .lifter-arm { transform-box: view-box; }
-.lifter-arm-left { transform-origin: 90px 111px; animation: lift-left 2s ease-in-out infinite; }
-.lifter-arm-right { transform-origin: 150px 111px; animation: lift-right 2s ease-in-out infinite; }
-@keyframes lift-left { 0%, 100% { transform: rotate(0deg); } 45%, 60% { transform: rotate(75deg); } }
-@keyframes lift-right { 0%, 100% { transform: rotate(0deg); } 45%, 60% { transform: rotate(-75deg); } }
+.lifter-arm-left { transform-origin: 90px 111px; animation: lift-left 2.8s ease-in-out infinite; }
+.lifter-arm-right { transform-origin: 150px 111px; animation: lift-right 2.8s ease-in-out infinite; }
+@keyframes lift-left { 0%, 15%, 100% { transform: rotate(0deg); } 48%, 65% { transform: rotate(145deg); } }
+@keyframes lift-right { 0%, 15%, 100% { transform: rotate(0deg); } 48%, 65% { transform: rotate(-145deg); } }
 @media (prefers-reduced-motion: reduce) { .lifter-arm-left, .lifter-arm-right { animation: none; } }
