@@ -40,6 +40,7 @@ export function LiftingPerson() {
       <animate attributeName="d" dur="2.8s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.18;0.52;0.72;1" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" values="M217 147 Q244 164 227 178 Q212 188 214 143;M217 147 Q244 164 227 178 Q212 188 214 143;M217 147 Q238 130 227 95 Q222 78 214 63;M217 147 Q238 130 227 95 Q222 78 214 63;M217 147 Q244 164 227 178 Q212 188 214 143" />
     </path>
     <g className="press-bar">
+      <animateTransform attributeName="transform" type="translate" dur="2.8s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.18;0.52;0.72;1" keySplines="0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1;0.4 0 0.2 1" values="0 0;0 0;0 -80;0 -80;0 0" />
       <rect x="53" y="134" width="254" height="8" rx="4" fill="#D6DEE2" />
       <rect x="64" y="119" width="16" height="38" rx="4" fill="#343B50" /><rect x="83" y="124" width="9" height="28" rx="3" fill="#E97890" />
       <rect x="268" y="124" width="9" height="28" rx="3" fill="#E97890" /><rect x="280" y="119" width="16" height="38" rx="4" fill="#343B50" />

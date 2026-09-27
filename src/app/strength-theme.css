@@ -182,6 +182,4 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .orbit-core .fitness-icon { width: 55%; height: 55%; fill: none; stroke: none; }
 .ready-art { display: grid; place-items: center; width: min(90vw, 420px); min-height: min(45vh, 390px); border-radius: 50%; background: radial-gradient(circle, #704051 0%, #49303d 45%, #29242d 70%, transparent 72%); }
 .ready-screen .lifting-person { display: block; width: min(83vw, 370px); height: auto; flex: 0 0 auto; overflow: visible; }
-.press-bar { animation: press-up 2.8s cubic-bezier(.4,0,.2,1) infinite; }
-@keyframes press-up { 0%, 18%, 100% { transform: translateY(0); } 52%, 72% { transform: translateY(-80px); } }
-@media (prefers-reduced-motion: reduce) { .press-bar, .press-arm animate { animation: none; display: none; } }
+@media (prefers-reduced-motion: reduce) { .lifting-person animate, .lifting-person animateTransform { display: none; } }
