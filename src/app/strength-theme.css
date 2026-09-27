@@ -1,29 +1,29 @@
 :root {
   --bg: #121212;
   --card: #2B2D42;
-  --ink: #FFFFFF;
+  --ink: #F5F5F6;
   --muted: #B9BBC8;
   --line: #4B4D60;
-  --accent: #D90429;
-  --soft: #3A2633;
+  --accent: #B32642;
+  --soft: #352831;
 }
 html, body { background: var(--bg); color: var(--ink); color-scheme: dark; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline-color: #D9042966; }
-.notice, .week-card, .rest-stopwatch, .rest-banner, .metric-grid > div { background: var(--bg); color: #FFFFFF; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline-color: #B3264266; }
+.notice, .week-card, .rest-stopwatch, .rest-banner, .metric-grid > div { background: var(--bg); color: #F5F5F6; }
 .week-card, .rest-stopwatch { border: 1px solid var(--line); }
 .week-bars i, .record-row span { background: var(--accent); }
 .week-card span, .week-card small, .rest-banner small, .metric-grid span, .metric-grid small { color: var(--muted); }
 .bottom-nav { background: #121212ed; border-color: var(--line); }
 .bottom-nav > button:not(.start-fab) { color: #B9BBC8; }
-.bottom-nav > button.active { color: #FF4663; }
-.start-fab, .brand-mark, .primary-button { background: var(--accent); color: #FFFFFF; }
-.start-fab { box-shadow: 0 9px 24px #D9042955; }
-.primary-button { box-shadow: 0 10px 26px #D9042944; }
+.bottom-nav > button.active { color: #D56A7E; }
+.start-fab, .brand-mark, .primary-button { background: var(--accent); color: #F5F5F6; }
+.start-fab { box-shadow: 0 9px 24px #B3264255; }
+.primary-button { box-shadow: 0 10px 26px #B3264244; }
 .routine-card, .last-card, .progress-card, .lift-panel, .icon-button, .history-card, .history-card article,
 .session-list > button, .settings-card, .history-editor, .summary-list, .summary-grid > div, .workout-notes,
 .planner-day, .planner-routine, .split-options > button, .custom-choice { background: var(--card); color: var(--ink); border-color: var(--line); }
 .routine-card:hover { border-color: var(--accent); }
-.routine-icon, .exercise-tabs button.active, .resume-card, .today-card, .previous-strip, .plate-result { background: var(--soft); color: #FF6079; border-color: #743848; }
+.routine-icon, .exercise-tabs button.active, .resume-card, .today-card, .previous-strip, .plate-result { background: var(--soft); color: #D98293; border-color: #67404C; }
 .exercise-tabs button, .set-row, .quick-weight, .routine-editor, .counter, .history-editor input,
 .settings-grid input, .settings-grid select, .inline-field input, .add-line input, .add-line select,
 .routine-editor input, .routine-editor select, .set-row select, .set-row input, .set-effort input,
@@ -33,25 +33,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   background: #1C1D28; color: var(--ink); border-color: var(--line);
 }
 .quick-weight > div:first-of-type button { color: var(--muted); }
-.quick-weight > div:last-of-type button { color: #FF6079; }
-.set-row.completed { background: #38202A; border-color: #B43D55; }
-.set-badge { background: #4B2938; color: #FF6079; }
-.completed .set-badge, .completed .set-check { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+.quick-weight > div:last-of-type button { color: #D98293; }
+.set-row.completed { background: #30252B; border-color: #915061; }
+.set-badge { background: #443039; color: #D98293; }
+.completed .set-badge, .completed .set-check { background: var(--accent); color: #F5F5F6; border-color: var(--accent); }
 .set-check { background: #1C1D28; border-color: var(--line); }
 .set-check span { border-color: #B9BBC8; }
-.finish-button, .secondary-button, .add-exercise-bar button, .planner-link { background: var(--soft); color: #FF6079; border-color: #743848; }
-.previous-strip, .plate-result { color: #FF96A8; }
-.previous-strip button, .today-card button { color: #FF6079; }
-.undo-card, .danger-button, .detail-actions .danger-button, .danger-link { background: #3A2029; border-color: #7F3043; color: #FF7890; }
-.setup-shell { background: radial-gradient(circle at 50% 38%, #3A2029 0, #1D1D24 55%, #121212 100%); }
+.finish-button, .secondary-button, .add-exercise-bar button, .planner-link { background: var(--soft); color: #D98293; border-color: #67404C; }
+.previous-strip, .plate-result { color: #E0A5B1; }
+.previous-strip button, .today-card button { color: #D98293; }
+.undo-card, .danger-button, .detail-actions .danger-button, .danger-link { background: #34252C; border-color: #67404C; color: #DA8798; }
+.setup-shell { background: radial-gradient(circle at 50% 38%, #34252C 0, #1D1D24 55%, #121212 100%); }
 .setup-copy p:last-child, .setup-intro, .ready-screen p { color: var(--muted); }
-.orbit-ring { border-color: #7F3043; }
-.orbit-ring span { background: var(--card); box-shadow: 0 9px 25px #00000055; color: #FF6079; }
-.orbit-core { background: var(--accent); box-shadow: 0 18px 45px #D9042966; }
-.planner-exercise button { background: var(--soft); color: #FF6079; }
-.today-card { border-color: #743848; }
+.orbit-ring { border-color: #67404C; }
+.orbit-ring span { background: var(--card); box-shadow: 0 9px 25px #00000055; color: #D98293; }
+.orbit-core { background: var(--accent); box-shadow: 0 18px 45px #B3264266; }
+.planner-exercise button { background: var(--soft); color: #D98293; }
+.today-card { border-color: #67404C; }
 .planner-routine-body label, .planner-hint { color: var(--muted); }
-.rest-stopwatch-heading span svg { color: #FF6079; }
+.rest-stopwatch-heading span svg { color: #D98293; }
 .rest-stopwatch small, .rest-reset { color: var(--muted); }
 ::placeholder { color: #A8A9B7; opacity: 1; }
 .notice button, .tag-list span, .tag-list button { background: var(--card); color: var(--ink); }
