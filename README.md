@@ -4,14 +4,18 @@ A mobile-first Progressive Web App for logging strength workouts, reviewing hist
 
 ## Features
 
-- Quick workout routines and empty workouts
-- Weight increments of 1, 2.5, 5, 10, 25, and 45 lb
-- Sets and reps tracking
-- Rest stopwatch with start, pause, resume, and reset controls
-- Workout history and personal records
+- Editable workout routines and empty workouts
+- Individual set logging with set type, weight, reps, RPE, RIR, and notes
+- Quick weight adjustments of ±1, 2.5, 5, 10, 25, and 45
+- Previous-performance copying and automatic draft recovery
+- Configurable rest countdown with screen wake lock
+- Workout summaries, editable session history, duplication, and delete undo
+- Progress metrics, estimated one-rep-max records, and weekly set totals
+- Custom exercises, pound/kilogram settings, and a plate calculator
+- JSON backup and restore
 - Offline-capable PWA with install support
 - Data stored locally on the user's device
-- 0.6-second directional page transitions
+- 0.8-second directional page transitions
 
 ## Local development
 

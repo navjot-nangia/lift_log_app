@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 import "./rest-stopwatch.css";
+import "./functionality.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
