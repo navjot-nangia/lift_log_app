@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RoutineSetup, { WeekPlanner } from "./RoutineSetup";
 import { FitnessIcon } from "./FitnessArt";
 import {
-  Check, ChevronLeft, Copy, Pause, Play, Plus, RotateCcw, TimerReset, Trash2, X,
+  Check, ChevronLeft, Copy, Play, Plus, Trash2, X,
 } from "lucide-react";
 import {
   DEFAULT_ROUTINES, DEFAULT_SETTINGS, allExerciseNames, completedSets, createSession,
@@ -15,15 +15,9 @@ import {
 } from "@/lib/workouts";
 
 type View = "workout" | "active" | "history" | "history-detail" | "progress" | "more" | "summary";
-type WakeLockHandle = { release: () => Promise<void> };
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
-function formatTimer(seconds: number) {
-  const safe = Math.max(0, Math.ceil(seconds));
-  return String(Math.floor(safe / 60)).padStart(2, "0") + ":" + String(safe % 60).padStart(2, "0");
 }
 
 function formatVolume(value: number) {
@@ -48,9 +42,6 @@ export default function LiftLogApp() {
   const [deleted, setDeleted] = useState<WorkoutSession | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [summarySession, setSummarySession] = useState<WorkoutSession | null>(null);
-  const [restRemaining, setRestRemaining] = useState(0);
-  const [restEndsAt, setRestEndsAt] = useState<number | null>(null);
-  const wakeLock = useRef<WakeLockHandle | null>(null);
 
   useEffect(() => {
     setData(loadData());
@@ -65,42 +56,6 @@ export default function LiftLogApp() {
     const timer = window.setTimeout(() => setNotice(""), 2600);
     return () => window.clearTimeout(timer);
   }, [notice]);
-
-  useEffect(() => {
-    if (restEndsAt === null) return;
-    const update = () => {
-      const left = Math.max(0, Math.ceil((restEndsAt - Date.now()) / 1000));
-      setRestRemaining(left);
-      if (left === 0) {
-        setRestEndsAt(null);
-        setNotice("Rest complete — ready for your next set");
-        navigator.vibrate?.([120, 80, 120]);
-      }
-    };
-    update();
-    const timer = window.setInterval(update, 250);
-    return () => window.clearInterval(timer);
-  }, [restEndsAt]);
-
-  useEffect(() => {
-    if (restEndsAt === null) {
-      wakeLock.current?.release().catch(() => undefined);
-      wakeLock.current = null;
-      return;
-    }
-    const request = async () => {
-      const nav = navigator as Navigator & { wakeLock?: { request: (type: "screen") => Promise<WakeLockHandle> } };
-      try { if (nav.wakeLock && document.visibilityState === "visible") wakeLock.current = await nav.wakeLock.request("screen"); } catch { /* unsupported or denied */ }
-    };
-    const onVisibility = () => { if (document.visibilityState === "visible" && restEndsAt !== null) void request(); };
-    void request();
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      wakeLock.current?.release().catch(() => undefined);
-      wakeLock.current = null;
-    };
-  }, [restEndsAt]);
 
   const exerciseNames = useMemo(() => allExerciseNames(data), [data]);
 
@@ -152,22 +107,6 @@ export default function LiftLogApp() {
     const set = active.exercises[exerciseIndex].sets[setIndex];
     const completing = !set.completed;
     updateSet(exerciseIndex, setIndex, { completed: completing, completedAt: completing ? new Date().toISOString() : undefined });
-    if (completing) startRest(active.exercises[exerciseIndex].restSeconds);
-  }
-
-  function startRest(seconds: number) {
-    setRestRemaining(seconds);
-    setRestEndsAt(Date.now() + seconds * 1000);
-  }
-
-  function pauseRest() {
-    if (restEndsAt === null) return;
-    setRestRemaining(Math.max(0, Math.ceil((restEndsAt - Date.now()) / 1000)));
-    setRestEndsAt(null);
-  }
-
-  function resumeRest() {
-    if (restRemaining > 0) setRestEndsAt(Date.now() + restRemaining * 1000);
   }
 
   function finishWorkout() {
@@ -179,8 +118,6 @@ export default function LiftLogApp() {
     setData((current) => ({ ...current, sessions: [finished, ...current.sessions] }));
     setSummarySession(finished);
     setActive(null);
-    setRestEndsAt(null);
-    setRestRemaining(0);
     navigate("summary");
   }
 
@@ -220,11 +157,8 @@ export default function LiftLogApp() {
   function currentScreen() {
     if (view === "active" && active) return <ActiveWorkout
       session={active} unit={data.settings.unit} exerciseNames={exerciseNames} sessions={data.sessions}
-      restRemaining={restRemaining} restRunning={restEndsAt !== null}
       updateSession={setActive} updateExercise={updateExercise} updateSet={updateSet} toggleSet={toggleSet}
       toggleUnit={() => changeUnit(data.settings.unit === "lb" ? "kg" : "lb")}
-      startRest={startRest} pauseRest={pauseRest} resumeRest={resumeRest}
-      resetRest={() => { setRestEndsAt(null); setRestRemaining(0); }}
       finish={finishWorkout} close={() => navigate("workout", true)}
     />;
     if (view === "history") return <HistoryView sessions={data.sessions} unit={data.settings.unit} open={(id) => { setSelectedSessionId(id); navigate("history-detail"); }} deleted={deleted} undoDelete={undoDelete} />;
@@ -265,33 +199,18 @@ function WorkoutHome({ data, draft, begin, beginEmpty, resume }: { data: LiftLog
 type ActiveProps = {
   session: WorkoutSession; unit: string; exerciseNames: string[]; sessions: WorkoutSession[];
   toggleUnit: () => void;
-  restRemaining: number; restRunning: boolean;
   updateSession: React.Dispatch<React.SetStateAction<WorkoutSession | null>>;
   updateExercise: (index: number, updater: (exercise: WorkoutExercise) => WorkoutExercise) => void;
   updateSet: (exerciseIndex: number, setIndex: number, patch: Partial<WorkoutSet>) => void;
   toggleSet: (exerciseIndex: number, setIndex: number) => void;
-  startRest: (seconds: number) => void; pauseRest: () => void; resumeRest: () => void; resetRest: () => void;
   finish: () => void; close: () => void;
 };
 
 function ActiveWorkout(props: ActiveProps) {
   const [exerciseIndex, setExerciseIndex] = useState(0);
-  const [focusedSetId, setFocusedSetId] = useState<string | null>(null);
-  const [weightStep, setWeightStep] = useState<number | null>(null);
   const [newExercise, setNewExercise] = useState(props.exerciseNames[0] ?? "Bench Press");
   const exercise = props.session.exercises[Math.min(exerciseIndex, props.session.exercises.length - 1)];
   const previous = props.sessions.find((session) => session.exercises.some((item) => item.name === exercise.name))?.exercises.find((item) => item.name === exercise.name);
-  const nextSetIndex = Math.max(0, exercise.sets.findIndex((set) => !set.completed));
-  const focusedIndex = exercise.sets.findIndex((set) => set.id === focusedSetId);
-  const adjustmentSetIndex = focusedIndex >= 0 ? focusedIndex : exercise.sets.every((set) => set.completed) ? Math.max(0, exercise.sets.length - 1) : nextSetIndex;
-  const steps = props.unit === "kg" ? [1, 2.5, 5, 10, 20] : [2.5, 5, 10, 25, 45];
-  const step = weightStep && steps.includes(weightStep) ? weightStep : props.unit === "kg" ? 2.5 : 5;
-  const selectedSet = exercise.sets[adjustmentSetIndex];
-  function changeWeight(amount: number) {
-    if (!selectedSet) return;
-    props.updateSet(exerciseIndex, adjustmentSetIndex, { weight: Math.max(0, Number((selectedSet.weight + amount).toFixed(2))) });
-  }
-
   function addExercise() {
     if (props.session.exercises.some((item) => item.name === newExercise)) return;
     props.updateSession((current) => current ? { ...current, exercises: [...current.exercises, { id: makeId(), name: newExercise, targetReps: 5, restSeconds: 90, notes: "", sets: [createWorkoutSet(0, 5), createWorkoutSet(0, 5), createWorkoutSet(0, 5)] }] } : current);
@@ -308,13 +227,11 @@ function ActiveWorkout(props: ActiveProps) {
 
   return <div className="screen active-screen">
     <header className="workout-header"><button className="icon-button" onClick={props.close} aria-label="Pause workout"><ChevronLeft /></button><div><p className="eyebrow">WORKOUT · {exerciseIndex + 1}/{props.session.exercises.length}</p><h1>{props.session.routineName}</h1></div></header>
-    <RestTimer seconds={props.restRemaining} running={props.restRunning} start={() => props.startRest(exercise.restSeconds)} pause={props.pauseRest} resume={props.resumeRest} reset={props.resetRest} adjust={(amount) => props.startRest(Math.max(0, props.restRemaining + amount))} />
-    <div className="exercise-tabs">{props.session.exercises.map((item, index) => <button key={item.id} className={index === exerciseIndex ? "active" : ""} onClick={() => { setExerciseIndex(index); setFocusedSetId(null); }}>{item.name}<small>{item.sets.filter((set) => set.completed).length}/{item.sets.length}</small></button>)}</div>
+    <div className="exercise-tabs">{props.session.exercises.map((item, index) => <button key={item.id} className={index === exerciseIndex ? "active" : ""} onClick={() => setExerciseIndex(index)}>{item.name}<small>{item.sets.filter((set) => set.completed).length}/{item.sets.length}</small></button>)}</div>
     <section className="lift-panel set-logger">
-      <div className="exercise-heading"><div><span>Exercise</span><h2>{exercise.name}</h2></div><label>Rest<select value={exercise.restSeconds} onChange={(event) => props.updateExercise(exerciseIndex, (current) => ({ ...current, restSeconds: Number(event.target.value) }))}>{[30,45,60,90,120,150,180,240,300].map((seconds) => <option key={seconds} value={seconds}>{seconds < 60 ? seconds + " sec" : seconds / 60 + " min"}</option>)}</select></label></div>
+      <div className="exercise-heading"><div><span>Exercise</span><h2>{exercise.name}</h2></div></div>
       {previous && <div className="previous-strip"><span>Previous: {previous.sets.filter((set) => set.completed).map((set) => set.weight + "×" + set.reps).join(", ") || "No completed sets"}</span><button onClick={copyPrevious}><Copy />Copy</button></div>}
-      {selectedSet && <div className="weight-control"><span className="weight-caption">Set {adjustmentSetIndex + 1} weight</span><div className="weight-main"><button type="button" onClick={() => changeWeight(-step)} aria-label={`Decrease set ${adjustmentSetIndex + 1} weight by ${step} ${props.unit}`}>−</button><label><input aria-label={`Set ${adjustmentSetIndex + 1} weight in ${props.unit}`} type="number" inputMode="decimal" min="0" step="any" value={selectedSet.weight} onChange={(event) => props.updateSet(exerciseIndex, adjustmentSetIndex, { weight: Math.max(0, Number(event.target.value)) })} /><span>{props.unit}</span></label><button type="button" onClick={() => changeWeight(step)} aria-label={`Increase set ${adjustmentSetIndex + 1} weight by ${step} ${props.unit}`}>+</button></div><div className="weight-step"><label>Change by <select value={step} onChange={(event) => setWeightStep(Number(event.target.value))}>{steps.map((amount) => <option key={amount} value={amount}>{amount} {props.unit}</option>)}</select></label><button type="button" className="unit-switch" onClick={props.toggleUnit}>Switch to {props.unit === "lb" ? "kg" : "lb"}</button></div></div>}
-      <div className="set-list">{exercise.sets.map((set, setIndex) => <SetRow key={set.id} set={set} index={setIndex} unit={props.unit} selected={setIndex === adjustmentSetIndex} select={() => setFocusedSetId(set.id)} update={(patch) => props.updateSet(exerciseIndex, setIndex, patch)} toggle={() => { props.toggleSet(exerciseIndex, setIndex); setFocusedSetId(null); }} remove={() => { setFocusedSetId(null); props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: current.sets.filter((_, index) => index !== setIndex) })); }} />)}</div>
+      <div className="set-list">{exercise.sets.map((set, setIndex) => <SetRow key={set.id} set={set} index={setIndex} unit={props.unit} update={(patch) => props.updateSet(exerciseIndex, setIndex, patch)} toggle={() => props.toggleSet(exerciseIndex, setIndex)} remove={() => { props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: current.sets.filter((_, index) => index !== setIndex) })); }} />)}</div>
       <button className="secondary-button" onClick={() => props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: [...current.sets, createWorkoutSet(current.sets.at(-1)?.weight ?? 0, current.targetReps)] }))}><Plus />Add set</button>
       <label className="notes-field">Exercise notes<textarea value={exercise.notes} placeholder="Technique, pain, equipment…" onChange={(event) => props.updateExercise(exerciseIndex, (current) => ({ ...current, notes: event.target.value }))} /></label>
     </section>
@@ -324,18 +241,11 @@ function ActiveWorkout(props: ActiveProps) {
   </div>;
 }
 
-function SetRow({ set, index, unit, selected, select, update, toggle, remove }: { set: WorkoutSet; index: number; unit: string; selected: boolean; select: () => void; update: (patch: Partial<WorkoutSet>) => void; toggle: () => void; remove: () => void }) {
-  return <div className={"simple-set " + (set.completed ? "completed " : "") + (selected ? "selected" : "")}>
-    <div className="simple-set-main"><strong className="set-badge">{index + 1}</strong><button className="set-weight-select" type="button" onClick={select} aria-label={`Adjust set ${index + 1} weight`}>{set.weight} <small>{unit}</small></button><label className="reps-field"><input aria-label={`Set ${index + 1} reps`} type="number" inputMode="numeric" min="0" max="99" value={set.reps} onChange={(event) => update({ reps: Math.max(0, Number(event.target.value)) })} /><small>reps</small></label><button className="set-check" type="button" onClick={toggle} aria-pressed={set.completed} aria-label={(set.completed ? "Reopen logged" : "Log") + " set " + (index + 1)}><Check aria-hidden="true" /><span>{set.completed ? "Logged" : "Log set"}</span></button></div>
+function SetRow({ set, index, unit, update, toggle, remove }: { set: WorkoutSet; index: number; unit: string; update: (patch: Partial<WorkoutSet>) => void; toggle: () => void; remove: () => void }) {
+  return <div className={"simple-set " + (set.completed ? "completed " : "")}>
+    <div className="simple-set-main"><strong className="set-badge">{index + 1}</strong><label className="set-weight-select"><input aria-label={`Set ${index + 1} weight in ${unit}`} type="number" inputMode="decimal" min="0" step="any" value={set.weight} onChange={(event) => update({ weight: Math.max(0, Number(event.target.value)) })} /><small>{unit}</small></label><label className="reps-field"><input aria-label={`Set ${index + 1} reps`} type="number" inputMode="numeric" min="0" max="99" value={set.reps} onChange={(event) => update({ reps: Math.max(0, Number(event.target.value)) })} /><small>reps</small></label><button className="set-check" type="button" onClick={toggle} aria-pressed={set.completed} aria-label={(set.completed ? "Reopen logged" : "Log") + " set " + (index + 1)}><Check aria-hidden="true" /><span>{set.completed ? "Logged" : "Log set"}</span></button></div>
     <details className="set-options"><summary>More set options</summary><div className="set-options-fields"><label>Type<select aria-label={`Set ${index + 1} type`} value={set.type} onChange={(event) => update({ type: event.target.value as SetType })}><option value="warm-up">Warm-up</option><option value="working">Main</option><option value="drop">Drop</option><option value="failure">Failure</option></select></label><label>RPE<input aria-label={`Set ${index + 1} RPE`} type="number" inputMode="decimal" min="1" max="10" step="0.5" placeholder="—" value={set.rpe ?? ""} onChange={(event) => update({ rpe: event.target.value ? Number(event.target.value) : undefined })} /></label><label>RIR<input aria-label={`Set ${index + 1} reps in reserve`} type="number" inputMode="numeric" min="0" max="10" placeholder="—" value={set.rir ?? ""} onChange={(event) => update({ rir: event.target.value ? Number(event.target.value) : undefined })} /></label><input className="set-note" aria-label={`Set ${index + 1} notes`} placeholder="Optional note" value={set.notes ?? ""} onChange={(event) => update({ notes: event.target.value })} /><button className="set-delete" onClick={remove}><Trash2 /> Remove set</button></div></details>
   </div>;
-}
-
-function RestTimer({ seconds, running, start, pause, resume, reset, adjust }: { seconds: number; running: boolean; start: () => void; pause: () => void; resume: () => void; reset: () => void; adjust: (amount: number) => void }) {
-  return <section className="rest-stopwatch" aria-label="Rest countdown">
-    <div className="rest-stopwatch-heading"><div><span><TimerReset /> Rest countdown</span><small>Screen stays awake while timing</small></div><strong>{formatTimer(seconds)}</strong></div>
-    <div className="timer-adjust"><button onClick={() => adjust(-15)}>−15s</button><button className="rest-toggle" onClick={running ? pause : seconds > 0 ? resume : start}>{running ? <><Pause />Pause</> : <><Play />{seconds > 0 ? "Resume" : "Start rest"}</>}</button><button onClick={() => adjust(15)}>+15s</button><button className="rest-reset" onClick={reset} disabled={seconds === 0}><RotateCcw /></button></div>
-  </section>;
 }
 
 function SummaryView({ session, unit, done }: { session: WorkoutSession; unit: string; done: () => void }) {
@@ -401,7 +311,7 @@ function MoreView({ data, setData, exerciseNames, notify, changeUnit }: { data: 
   }
 
   return <div className="screen"><header className="topbar"><div><p className="eyebrow">SETTINGS</p><h1>More</h1></div><FitnessIcon kind="bag" /></header>
-    <section className="settings-card"><h2>Training settings</h2><div className="settings-grid"><label>Units<select value={data.settings.unit} onChange={(event) => changeUnit(event.target.value as "lb" | "kg")}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label><label>Bar weight<input type="number" value={data.settings.barWeight} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, barWeight: Number(event.target.value) } }))} /></label><label>Default rest<select value={data.settings.defaultRestSeconds} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, defaultRestSeconds: Number(event.target.value) } }))}>{[30,60,90,120,180,240].map((seconds) => <option key={seconds} value={seconds}>{seconds} sec</option>)}</select></label></div></section>
+    <section className="settings-card"><h2>Training settings</h2><div className="settings-grid"><label>Units<select value={data.settings.unit} onChange={(event) => changeUnit(event.target.value as "lb" | "kg")}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label><label>Bar weight<input type="number" value={data.settings.barWeight} onChange={(event) => setData((current) => ({ ...current, settings: { ...current.settings, barWeight: Number(event.target.value) } }))} /></label></div></section>
     <section className="settings-card"><h2>Weekly routine schedule</h2><p className="muted-copy">Drag days to swap them, or select a split for each day.</p><WeekPlanner data={data} update={setData} compact /><div className="schedule-exercises"><h3>Add your own exercise</h3><p className="muted-copy">Create an exercise here, then open a routine below to add it to that workout.</p><div className="add-line"><input value={customName} placeholder="Exercise name" aria-label="New exercise name" onChange={(event) => setCustomName(event.target.value)} /><button onClick={addCustom}><Plus />Add</button></div>{data.customExercises.length > 0 && <div className="tag-list">{data.customExercises.map((name) => <span key={name}>{name}<button aria-label={`Remove ${name}`} onClick={() => setData((current) => ({ ...current, customExercises: current.customExercises.filter((item) => item !== name) }))}><X /></button></span>)}</div>}</div></section>
     <section className="settings-card"><h2>Routine builder</h2><div className="add-line"><input value={newRoutineName} placeholder="New routine name" onChange={(event) => setNewRoutineName(event.target.value)} /><button onClick={addRoutine}><Plus />Create</button></div>{data.routines.map((routine, index) => <RoutineEditor key={routine.id} routine={routine} exerciseNames={exerciseNames} update={(updated) => setData((current) => ({ ...current, routines: current.routines.map((item, itemIndex) => itemIndex === index ? updated : item) }))} remove={() => setData((current) => ({ ...current, routines: current.routines.filter((item) => item.id !== routine.id) }))} />)}</section>
   </div>;
