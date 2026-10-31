@@ -208,9 +208,27 @@ type ActiveProps = {
 
 function ActiveWorkout(props: ActiveProps) {
   const [exerciseIndex, setExerciseIndex] = useState(0);
+  const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
+  const [weightIncrement, setWeightIncrement] = useState(5);
   const [newExercise, setNewExercise] = useState(props.exerciseNames[0] ?? "Bench Press");
   const exercise = props.session.exercises[Math.min(exerciseIndex, props.session.exercises.length - 1)];
   const previous = props.sessions.find((session) => session.exercises.some((item) => item.name === exercise.name))?.exercises.find((item) => item.name === exercise.name);
+  const firstPending = exercise.sets.findIndex((set) => !set.completed);
+  const chosenIndex = exercise.sets.findIndex((set) => set.id === selectedSetId);
+  const currentSetIndex = chosenIndex >= 0 ? chosenIndex : firstPending >= 0 ? firstPending : Math.max(0, exercise.sets.length - 1);
+  const currentSet = exercise.sets[currentSetIndex];
+  const increments = props.unit === "lb" ? [1, 2.5, 5, 10, 20, 25, 45] : [1, 2.5, 5, 10, 20];
+  const increment = increments.includes(weightIncrement) ? weightIncrement : 5;
+  const adjustWeight = (direction: number) => {
+    if (!currentSet) return;
+    props.updateSet(exerciseIndex, currentSetIndex, { weight: Math.max(0, Number((currentSet.weight + direction * increment).toFixed(2))) });
+  };
+  const logCurrent = () => {
+    if (!currentSet) return;
+    props.toggleSet(exerciseIndex, currentSetIndex);
+    // A newly logged set advances to the next incomplete set automatically.
+    setSelectedSetId(null);
+  };
   function addExercise() {
     if (props.session.exercises.some((item) => item.name === newExercise)) return;
     props.updateSession((current) => current ? { ...current, exercises: [...current.exercises, { id: makeId(), name: newExercise, targetReps: 5, restSeconds: 90, notes: "", sets: [createWorkoutSet(0, 5), createWorkoutSet(0, 5), createWorkoutSet(0, 5)] }] } : current);
@@ -227,11 +245,24 @@ function ActiveWorkout(props: ActiveProps) {
 
   return <div className="screen active-screen">
     <header className="workout-header"><button className="icon-button" onClick={props.close} aria-label="Pause workout"><ChevronLeft /></button><div><p className="eyebrow">WORKOUT · {exerciseIndex + 1}/{props.session.exercises.length}</p><h1>{props.session.routineName}</h1></div></header>
-    <div className="exercise-tabs">{props.session.exercises.map((item, index) => <button key={item.id} className={index === exerciseIndex ? "active" : ""} onClick={() => setExerciseIndex(index)}>{item.name}<small>{item.sets.filter((set) => set.completed).length}/{item.sets.length}</small></button>)}</div>
+    <div className="exercise-tabs">{props.session.exercises.map((item, index) => <button key={item.id} className={index === exerciseIndex ? "active" : ""} onClick={() => { setExerciseIndex(index); setSelectedSetId(null); }}>{item.name}<small>{item.sets.filter((set) => set.completed).length}/{item.sets.length}</small></button>)}</div>
     <section className="lift-panel set-logger">
       <div className="exercise-heading"><div><span>Exercise</span><h2>{exercise.name}</h2></div></div>
       {previous && <div className="previous-strip"><span>Previous: {previous.sets.filter((set) => set.completed).map((set) => set.weight + "×" + set.reps).join(", ") || "No completed sets"}</span><button onClick={copyPrevious}><Copy />Copy</button></div>}
-      <div className="set-list">{exercise.sets.map((set, setIndex) => <SetRow key={set.id} set={set} index={setIndex} unit={props.unit} update={(patch) => props.updateSet(exerciseIndex, setIndex, patch)} toggle={() => props.toggleSet(exerciseIndex, setIndex)} remove={() => { props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: current.sets.filter((_, index) => index !== setIndex) })); }} />)}</div>
+      <div className="set-progress"><span>{exercise.sets.filter((set) => set.completed).length} of {exercise.sets.length} sets logged</span><div className="set-progress-dots">{exercise.sets.map((set, index) => <button key={set.id} type="button" className={index === currentSetIndex ? "current" : set.completed ? "done" : ""} onClick={() => setSelectedSetId(set.id)} aria-label={`View set ${index + 1}`} aria-current={index === currentSetIndex ? "step" : undefined}>{index + 1}</button>)}</div></div>
+      {currentSet && <div className="single-set-panel" key={currentSet.id}>
+        <h3>Set {currentSetIndex + 1} <small>{currentSet.completed ? "· Logged" : "· Ready to log"}</small></h3>
+        <div className="single-set-values">
+          <label>Weight ({props.unit})<input type="number" inputMode="decimal" min="0" step="any" aria-label="Current set weight" value={currentSet.weight} onChange={(event) => props.updateSet(exerciseIndex, currentSetIndex, { weight: Math.max(0, Number(event.target.value)) })} /></label>
+          <label>Reps<input type="number" inputMode="numeric" min="0" max="99" aria-label="Current set reps" value={currentSet.reps} onChange={(event) => props.updateSet(exerciseIndex, currentSetIndex, { reps: Math.max(0, Number(event.target.value)) })} /></label>
+        </div>
+        <div className="increment-label">Change weight by ({props.unit})</div>
+        <div className="increment-options">{increments.map((amount) => <button type="button" key={amount} className={increment === amount ? "selected" : ""} onClick={() => setWeightIncrement(amount)}>{amount}</button>)}</div>
+        <div className="weight-adjust-actions"><button type="button" onClick={() => adjustWeight(-1)} aria-label={`Decrease weight by ${increment} ${props.unit}`}>− {increment}</button><button type="button" onClick={() => adjustWeight(1)} aria-label={`Increase weight by ${increment} ${props.unit}`}>+ {increment}</button></div>
+        <SetOptions set={currentSet} index={currentSetIndex} update={(patch) => props.updateSet(exerciseIndex, currentSetIndex, patch)} remove={() => { setSelectedSetId(null); props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: current.sets.filter((set) => set.id !== currentSet.id) })); }} />
+        <button className="single-set-log" type="button" onClick={logCurrent}><Check />{currentSet.completed ? "Reopen set" : "Log set & next"}</button>
+      </div>}
+      {exercise.sets.length > 0 && firstPending < 0 && <p className="all-sets-done">All sets logged. Add a set or choose another exercise.</p>}
       <button className="secondary-button" onClick={() => props.updateExercise(exerciseIndex, (current) => ({ ...current, sets: [...current.sets, createWorkoutSet(current.sets.at(-1)?.weight ?? 0, current.targetReps)] }))}><Plus />Add set</button>
       <label className="notes-field">Exercise notes<textarea value={exercise.notes} placeholder="Technique, pain, equipment…" onChange={(event) => props.updateExercise(exerciseIndex, (current) => ({ ...current, notes: event.target.value }))} /></label>
     </section>
@@ -241,10 +272,8 @@ function ActiveWorkout(props: ActiveProps) {
   </div>;
 }
 
-function SetRow({ set, index, unit, update, toggle, remove }: { set: WorkoutSet; index: number; unit: string; update: (patch: Partial<WorkoutSet>) => void; toggle: () => void; remove: () => void }) {
-  return <div className={"simple-set " + (set.completed ? "completed " : "")}>
-    <div className="simple-set-main"><strong className="set-badge">{index + 1}</strong><label className="set-weight-select"><input aria-label={`Set ${index + 1} weight in ${unit}`} type="number" inputMode="decimal" min="0" step="any" value={set.weight} onChange={(event) => update({ weight: Math.max(0, Number(event.target.value)) })} /><small>{unit}</small></label><label className="reps-field"><input aria-label={`Set ${index + 1} reps`} type="number" inputMode="numeric" min="0" max="99" value={set.reps} onChange={(event) => update({ reps: Math.max(0, Number(event.target.value)) })} /><small>reps</small></label><button className="set-check" type="button" onClick={toggle} aria-pressed={set.completed} aria-label={(set.completed ? "Reopen logged" : "Log") + " set " + (index + 1)}><Check aria-hidden="true" /><span>{set.completed ? "Logged" : "Log set"}</span></button></div>
-    <details className="set-options"><summary>More set options</summary><div className="set-options-fields"><label>Type<select aria-label={`Set ${index + 1} type`} value={set.type} onChange={(event) => update({ type: event.target.value as SetType })}><option value="warm-up">Warm-up</option><option value="working">Main</option><option value="drop">Drop</option><option value="failure">Failure</option></select></label><label>RPE<input aria-label={`Set ${index + 1} RPE`} type="number" inputMode="decimal" min="1" max="10" step="0.5" placeholder="—" value={set.rpe ?? ""} onChange={(event) => update({ rpe: event.target.value ? Number(event.target.value) : undefined })} /></label><label>RIR<input aria-label={`Set ${index + 1} reps in reserve`} type="number" inputMode="numeric" min="0" max="10" placeholder="—" value={set.rir ?? ""} onChange={(event) => update({ rir: event.target.value ? Number(event.target.value) : undefined })} /></label><input className="set-note" aria-label={`Set ${index + 1} notes`} placeholder="Optional note" value={set.notes ?? ""} onChange={(event) => update({ notes: event.target.value })} /><button className="set-delete" onClick={remove}><Trash2 /> Remove set</button></div></details>
+function SetOptions({ set, index, update, remove }: { set: WorkoutSet; index: number; update: (patch: Partial<WorkoutSet>) => void; remove: () => void }) {
+  return <details className="set-options"><summary>More set options</summary><div className="set-options-fields"><label>Type<select aria-label={`Set ${index + 1} type`} value={set.type} onChange={(event) => update({ type: event.target.value as SetType })}><option value="warm-up">Warm-up</option><option value="working">Main</option><option value="drop">Drop</option><option value="failure">Failure</option></select></label><label>RPE<input aria-label={`Set ${index + 1} RPE`} type="number" inputMode="decimal" min="1" max="10" step="0.5" placeholder="—" value={set.rpe ?? ""} onChange={(event) => update({ rpe: event.target.value ? Number(event.target.value) : undefined })} /></label><label>RIR<input aria-label={`Set ${index + 1} reps in reserve`} type="number" inputMode="numeric" min="0" max="10" placeholder="—" value={set.rir ?? ""} onChange={(event) => update({ rir: event.target.value ? Number(event.target.value) : undefined })} /></label><input className="set-note" aria-label={`Set ${index + 1} notes`} placeholder="Optional note" value={set.notes ?? ""} onChange={(event) => update({ notes: event.target.value })} /><button className="set-delete" onClick={remove}><Trash2 /> Remove set</button></div></details>
   </div>;
 }
 
