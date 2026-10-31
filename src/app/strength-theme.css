@@ -183,3 +183,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .ready-art { display: grid; place-items: center; width: min(90vw, 420px); min-height: min(45vh, 390px); border-radius: 50%; background: radial-gradient(circle, #704051 0%, #49303d 45%, #29242d 70%, transparent 72%); }
 .ready-screen .lifting-person { display: block; width: min(83vw, 370px); height: auto; flex: 0 0 auto; overflow: visible; }
 @media (prefers-reduced-motion: reduce) { .lifting-person animate, .lifting-person animateTransform { display: none; } }
+
+
+/* Edit weight directly inside each set, without opening a second control. */
+.simple-set .set-weight-select {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  cursor: text;
+}
+.simple-set .set-weight-select input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.simple-set .set-weight-select:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
